@@ -41,15 +41,51 @@ tar_option_set(packages = c("tidyr",
 
 list(
   
-  ## Input data -----  
+  ## Input data paths -----  
   
   ### Input paths to raw data -----------
-  tar_target(NPS_folder,
+  tar_target(Input_folder,
              file.path("Input"),
              format="file")#,
   
-  ### Read all csv data into list -----------
+  ## Read data ----- 
+  
+  ### Read biomass csv -------------
   #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  ### Read AK map -----------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  ## Set up landscape data for simulation ----- 
+  
+  ### Landscape grid setup ---------
+  
+  #### Refactor AK map ----------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  #### Recode AK map ----------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  #### Convert recoded AK map into matrix for simulation ---------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  ### Seasonal range setup ----------
+  
+  #### Create mock polygons to use as summer/winter ranges -------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  #### Create distance raster from summer/winter ranges ---------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  #### Convert distance raster to matrix for simulation ---------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  ### Convert distance raster to matrix for simulation ---------
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
+  ## Run simulation ----- 
+  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  
   
   
 )

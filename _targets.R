@@ -56,6 +56,9 @@ list(
   ### Read AK map -----------
   tar_terra_rast(akc,ReadAKNLCD(Input_folder)),
   
+  ### Read mock shapefiles -------
+  tar_target(range_list,ReadRanges(Input_folder)),
+  
   ## Set up landscape data for simulation ----- 
   
   ### Landscape grid setup ---------
@@ -63,24 +66,25 @@ list(
   tar_terra_rast(akc_refact,Refactor_AK(akc,type="res",res=1000)),
   
   #### Recode AK map ----------
-  tar_terra_rast(akc2,Recode_AK(akc_refact)),
+  tar_terra_rast(akc2p,Recode_AK(akc_refact)),
+  
+  #### Transform AK map ----------
+  #original is Alaska Albers with WGS84 datum, want NAD83 datum (EPSG:6393)
+  tar_terra_rast(akc2,Transform_AK(akc2p)),
+  
+  #### Crop AK map to square ----------
+  tar_terra_rast(akc3,Crop_Raster(akc2)),
   
   #### Convert recoded AK map into matrix for simulation ---------
-  tar_target(grid,Convert_toGrid(akc2))#,
+  tar_target(grid,Convert_toGrid(akc3)),
   
   ### Seasonal range setup ----------
   
-  #### Create mock polygons to use as summer/winter ranges -------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  #### Create distance raster from calving/summer/winter polygons ---------
+  tar_terra_sprc(range_dist_sprc,Distance_Ranges(range_list,akc3)),
   
-  #### Create distance raster from summer/winter ranges ---------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
-  
-  #### Convert distance raster to matrix for simulation ---------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
-  
-  ### Convert distance raster to matrix for simulation ---------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  #### Append grid with distance values for each of the three ranges ---------
+  tar_target(grid2,Append_Grid_Distance(grid,range_dist_sprc,range_list))#,
   
   ## Run simulation ----- 
   #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,

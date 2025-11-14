@@ -106,12 +106,44 @@ Append_Grid_Distance<-function(grid,range_dist_sprc,range_list){
   return(grid)
 }
 
-# Initialize caribou on landscape ---------
-Run_Simulation<-function(grid_list,N0,dist_start,akc3,out.opts=NULL){
+# Move jday df ---------
+#will allow inputs later
+Move_Jday<-function(){
+  #jday 1-60, resource driven, select inside calving area
+  #jday 61-150, resource driven, select inside summer area
+  #jday 151-X, go to wintering grounds, change movement when inside wintering grounds
+  #jday X-300, resource driven, select inside wintering grounds
+  #jday 301-X, go to calving grounds, change movement when inside calving grounds
+  mv_jday=data.frame(matrix(nrow=5,ncol=7))
+  colnames(mv_jday)=c("state","sl_shp","sl_rat","migr","attract","start","end")
+  mv_jday[,1]=c("calving",
+                "summer",
+                "falmigr",
+                "winter",
+                "sprmigr")
+  mv_jday[,2]=0.7515
+  mv_jday[,3]=0.3550
+  mv_jday[,4]=c(0,0,1,0,1)
+  mv_jday[,5]=c(1,2,3,3,1)
+  mv_jday[,6]=c(1,61,151,0,301)
+  mv_jday[,7]=c(60,150,0,300,0)
+  
+  return(mv_jday)
+}
+
+# Run simulation ---------
+Run_Simulation<-function(grid_list,
+                         mv_jday,
+                         N0,
+                         dist_start,
+                         akc3,
+                         out.opts=NULL){
   out.list=vector(mode="list",length=0)
   
+  # Initialize caribou on landscape ---------
   pop<-Initialize_Population(grid_list,N0,dist_start)
   
+  # Output initial condition objects ---------
   if(!missing(out.opts)){
     if("init_locs"%in%out.opts){
       templist=vector(mode="list",length=1)
@@ -129,6 +161,15 @@ Run_Simulation<-function(grid_list,N0,dist_start,akc3,out.opts=NULL){
       out.list=append(out.list,templist)
       
       }
+    
+  }
+  
+  # Start run through jdays ---------
+  shape=mv_jday$sl_shp[1] #hard coding these for now
+  rate=mv_jday$sl_rat[1]
+  
+  for(d in 1:365){
+  
     
   }
   

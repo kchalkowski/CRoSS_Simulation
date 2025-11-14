@@ -19,7 +19,7 @@ tar_config_set(
 )
 
 #Source functions in pipeline
-lapply(list.files(file.path("Scripts"), full.names = TRUE, recursive = TRUE), source)
+lapply(list.files(file.path("Scripts/R_Functions"), full.names = TRUE, recursive = TRUE), source)
 
 #set options
 options(clustermq.scheduler="multicore")
@@ -86,9 +86,13 @@ list(
   #### Append grid with distance values for each of the three ranges ---------
   tar_target(grid_list,Append_Grid_Distance(grid,range_dist_sprc,range_list)),
   
+  #### Create dataframe for changing movement by jday ---------
+  tar_target(mv_jday,Move_Jday()),
+  
   ## Run simulation ----- 
   tar_target(output_list,
   Run_Simulation(grid_list,
+                 mv_jday,
                  N0=100, #Number of caribou in simulation
                  dist_start=10000, #Maximum distance from calving area centerpoint to initialize caribou
                  akc3, 

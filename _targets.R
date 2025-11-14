@@ -46,28 +46,27 @@ list(
   ### Input paths to raw data -----------
   tar_target(Input_folder,
              file.path("Input"),
-             format="file")#,
+             format="file"),
   
   ## Read data ----- 
   
   ### Read biomass csv -------------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  #tar_target(biomass,ReadBiomass(Input_folder)),
   
   ### Read AK map -----------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  tar_terra_rast(akc,ReadAKNLCD(Input_folder)),
   
   ## Set up landscape data for simulation ----- 
   
   ### Landscape grid setup ---------
-  
   #### Refactor AK map ----------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  tar_terra_rast(akc_refact,Refactor_AK(akc,type="res",res=1000)),
   
   #### Recode AK map ----------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  tar_terra_rast(akc2,Recode_AK(akc_refact)),
   
   #### Convert recoded AK map into matrix for simulation ---------
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
+  tar_target(grid,Convert_toGrid(akc2))#,
   
   ### Seasonal range setup ----------
   

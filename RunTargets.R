@@ -15,3 +15,7 @@ tar_manifest()
 tar_make()
 #tar_make_clustermq(workers = 6)
 
+
+
+akc=tar_read(akc)
+

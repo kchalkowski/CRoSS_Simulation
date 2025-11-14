@@ -55,11 +55,13 @@ Crop_Raster<-function(akc2){
   akc2[1:1335,1592:2926,drop=FALSE]
 }
 
-#### Convert recoded AK map into matrix for simulation ---------
+# Convert recoded AK map into matrix for simulation ---------
 Convert_toGrid<-function(akc3){
   #input ras needs be square, hence subset
   Make_Grid(akc3)
 }
+
+# Get distance rasters and append to grid ---------
 
 #Helper function: Transform to raster type
 Transform_CRS_Albers<-function(sfo){
@@ -104,7 +106,35 @@ Append_Grid_Distance<-function(grid,range_dist_sprc,range_list){
   return(grid)
 }
 
-
+# Initialize caribou on landscape ---------
+Run_Simulation<-function(grid_list,N0,dist_start,akc3,out.opts=NULL){
+  out.list=vector(mode="list",length=0)
+  
+  pop<-Initialize_Population(grid_list,N0,dist_start)
+  
+  if(!missing(out.opts)){
+    if("init_locs"%in%out.opts){
+      templist=vector(mode="list",length=1)
+      centroids=grid_list$centroids
+      clocs=centroids[pop[,3],c(1,2)]
+      ccol=round(clocs[,1])
+      crow=round(clocs[,2])
+      
+      cx=terra::xFromCol(akc3,ccol)
+      cy=terra::yFromRow(akc3,crow)
+      
+      cdf=data.frame("x"=cx,"y"=cy)
+      
+      templist[[1]]=sf::st_as_sf(as.data.frame(cdf),coords=c(1,2),crs=st_crs(6393))
+      out.list=append(out.list,templist)
+      
+      }
+    
+  }
+  
+  return(out.list)
+  
+}
 
 
 

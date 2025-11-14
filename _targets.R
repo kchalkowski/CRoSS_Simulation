@@ -84,12 +84,19 @@ list(
   tar_terra_sprc(range_dist_sprc,Distance_Ranges(range_list,akc3)),
   
   #### Append grid with distance values for each of the three ranges ---------
-  tar_target(grid2,Append_Grid_Distance(grid,range_dist_sprc,range_list))#,
+  tar_target(grid_list,Append_Grid_Distance(grid,range_dist_sprc,range_list)),
   
   ## Run simulation ----- 
-  #tar_target(dat,ReadGeolocations(c(NPS_folder,USGS_folder)))#,
-  
-  
+  tar_target(output_list,
+  Run_Simulation(grid_list,
+                 N0=100, #Number of caribou in simulation
+                 dist_start=10000, #Maximum distance from calving area centerpoint to initialize caribou
+                 akc3, 
+                 out.opts=c("init_locs") #outputs (see end of this script for list of options)
+                 ))#,
   
 )
+
+#out.opts: options for outputs from simulation
+  #init_locs: output sf data frame with initial locations of caribou
 

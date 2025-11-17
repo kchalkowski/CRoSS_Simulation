@@ -109,7 +109,7 @@ list(
   
   ## Process outputs ----- 
   tar_target(processed_outputs,
-             Process_Outputs(output_list,centroids,akc3))#,
+             Process_Outputs(output_list,grid_list,akc3))#,
 )
 
 #out.opts: options for outputs from simulation

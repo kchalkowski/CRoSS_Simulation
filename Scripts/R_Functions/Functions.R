@@ -224,7 +224,8 @@ Run_Simulation<-function(grid_list,
   
 }
 
-Process_Outputs<-function(output_list,centroids,akc3){
+Process_Outputs<-function(output_list,grid_list,akc3){
+  centroids=grid_list$centroids
   processed_outputs=vector(mode="list",length=0)
   outputs=names(output_list)
   
@@ -235,7 +236,7 @@ Process_Outputs<-function(output_list,centroids,akc3){
   templist=vector(mode="list",length=1)
   templist[[1]]=init_locs_out
   processed_outputs=append(processed_outputs,templist)
-  names(processed_outputs)[[length(processed_outputs)]]="init_locs"
+  names(processed_outputs)[length(processed_outputs)]="init_locs"
   }
   
   if("tracking"%in%outputs){
@@ -252,7 +253,7 @@ Process_Outputs<-function(output_list,centroids,akc3){
     templist=vector(mode="list",length=1)
     templist[[1]]=lines
     processed_outputs=append(processed_outputs,templist)
-    names(processed_outputs)[[length(processed_outputs)]]="tracking"
+    names(processed_outputs)[length(processed_outputs)]="tracking"
   }
   
   return(processed_outputs)

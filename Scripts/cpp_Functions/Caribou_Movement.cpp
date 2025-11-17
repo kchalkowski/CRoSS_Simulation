@@ -30,10 +30,15 @@ struct MoveLoop : public Worker {
   // initialize with input and output
   //kind of like calling the function with a header, but with slightly different format
   
-  
+  //apop- whole matrix
+  //apopmat- behavioral state column
+  //apoplocs- current locations
+  //acent- centroids matrix
+
+  //Note: currently, apopmat and apoplocs are not used for anything. 
+  //Leaving in for now because it could be a good way to feed a switch in behavioral state in this function between migr/non-migr.
   
   MoveLoop(const NumericMatrix& apop,
-           //const IntegerMatrix& apopabund,
            const IntegerMatrix& apopmat,
            const IntegerMatrix& apoplocs,
            const NumericMatrix& acent,
@@ -92,10 +97,10 @@ struct MoveLoop : public Worker {
       double* cent_x = acent3.colptr(0);
       double* cent_y = acent3.colptr(1);
       
-      //initialize integers for pig movement distance and abundance
+      //initialize doubles for movement distance and abundance
       //slightly faster than grabbing the numbers each time
       double pop_j_3=apop3(j,3); //distancem pop[,4]
-      int pop_j_0=apop3(j,0); //abundance, pop[,1]
+      int pop_j_0=apop3(j,0); //abundance, pop[,1] 
       
       //loop through each element in centroids to get distance, then take the difference between that and assigned movement distance (pop_j_3)
       //if abundance (pop_j_0) and distance (pop_j_3) are greater than zero
@@ -107,7 +112,7 @@ struct MoveLoop : public Worker {
         
         //loop through each cell in centroids (acent3)
         for(std::size_t k = 0; k < acent.nrow(); k++) {
-          //get distance between current sounder and each cell in centroids, using spatial distance function
+          //get distance between current individual and each cell in centroids, using spatial distance function
           //get difference between that and assigned movement distance
           diffk_0=abs(sqrt(pow((cent_x[k]-apop3(j,4)),2)+pow((cent_y[k]-apop3(j,5)),2))-apop3(j,3));
           
@@ -115,7 +120,7 @@ struct MoveLoop : public Worker {
           diff(k,0)=diffk_0;
           
           //find distances closest to assigned movement distance, set mask to isolate those
-          if(diffk_0>=0 & diffk_0<=0.4){
+          if(diffk_0>=0 & diffk_0<=1.0){
             mask[k]=1;
           } else {
             mask[k]=0;    
@@ -134,61 +139,89 @@ struct MoveLoop : public Worker {
           
           //initialize truemin-- selected cellnumber to move to
           arma::uvec truemin;
+
+          ////////////////////////////////////////////////////////////
+          /////// Determine movement type from behavioral state /////
+          //////////////////////////////////////////////////////////
+
+          //Note: have this section in here as placeholder in case more switches are needed in this function for behavioral state
+          //For now, will just use column 8 of grid for selection preference, which will be changed outside of this function
+
+          //initialized in Initialize_Population.R
+          //updated in TBD behavioral state switch function
+          //Behavioral states:
+            //1-calving
+            //2-summer
+            //3-fall migration
+            //4-winter
+            //5-spring migration
+
+          //Behavioral state variation:
+            //1, 2, 4 just use NLCD selection
+            //3, 5 is migratory selection
+
+          //Currently, this variable is not used for anything
+          //int behav_stat = apop3(j,6);
           
           ///////////////////////////////////////
           /////// Distance-based movement //////
           /////////////////////////////////////
-          
+          //Note: turning off this switch for now
+
           //This is default-- if no other options selected (i.e., abundance or rsf), movement is determined by distance alone
           
           //if pref ==0 (distance-only), randomly sample a cell in set
-          if(pref==0){
+          //if(pref==0){
             
-            truemin = Rcpp::RcppArmadillo::sample(set,1,false);
-          }
+          //  truemin = Rcpp::RcppArmadillo::sample(set,1,false);
+          //}
           
           ///////////////////////////////////////////////////
           /////// Abundance-based movement preference //////
           /////////////////////////////////////////////////
-          
+          //Note: turning off this switch for now
+
           //Decide which cells in set to move to, based which cells in set have lowest abundance
           
-          if(pref==1){
+          //if(pref==1){
             //initialize vector for total abundance in each cell in set
             //set corresponds to indices of centroids/grids etc., i.e., cellnumber
-            arma::imat abund = apopmat3.rows(set);
+            //arma::imat abund = apopmat3.rows(set);
             
             //get minimum abundance value
-            int minabundinset = abund.min();
-            arma::ivec abundmask(abund.n_rows);
+            //int minabundinset = abund.min();
+            //arma::ivec abundmask(abund.n_rows);
             
             //Return indices of set which are equal to the minimum abundance value
-            for(std::size_t p = 0; p < abund.n_rows; ++p){
-              if(abund(p)==minabundinset) abundmask[p]=1; //set poplocs mask to 1 if any loc matches cell in set
-              else abundmask[p]=0;
-            }
+            //for(std::size_t p = 0; p < abund.n_rows; ++p){
+            //  if(abund(p)==minabundinset) abundmask[p]=1; //set poplocs mask to 1 if any loc matches cell in set
+            //  else abundmask[p]=0;
+            //}
             
             //then, cellindarma shouldbe wherever mask==1 (ie, wherever the value was equal to the minimum)
-            arma::uvec cellindarma = set.elem(find(abundmask==1));
+            //arma::uvec cellindarma = set.elem(find(abundmask==1));
             
             
             //if there are more than 1 cell with same minimum abundance, choose one at random
-            if(cellindarma.size()>1){
-              truemin = Rcpp::RcppArmadillo::sample(cellindarma,1,false);
+            //if(cellindarma.size()>1){
+            //  truemin = Rcpp::RcppArmadillo::sample(cellindarma,1,false);
               
-            } else {
-              truemin = cellindarma;
-            } 
+            //} else {
+            //  truemin = cellindarma;
+            //} 
             
-          } //if pref==1
+          //} //if pref==1
           
-          //////////////////////////////////
-          /////// RSF-based movement //////
-          ////////////////////////////////
+          ///////////////////////////////////////////////////
+          /////// RSF-based movement, prob input type //////
+          /////////////////////////////////////////////////
           
           //base movement on RSF preference only
-          
-          if(pref==2){
+          //currently, this is formatted to where the RSF values input represent probabilities of preference          
+          //this would be from preference input similar to ML pipeline done for pigs
+            //would be a good option to do this for caribou down the line
+
+          if(pref==0){
             
             //get rsf vals for all cells and subset to cells selected in set
             //double* cent_rsf = acent3.colptr(2);
@@ -201,8 +234,39 @@ struct MoveLoop : public Worker {
             arma::vec rsf_vals = cent_rsf(set);
             
             //use rsf_vals as probabilities for which cell to move to
-            //truemin = Rcpp::RcppArmadillo::sample(cellindarma,1,false);
             truemin = Rcpp::RcppArmadillo::sample(set,1,0,rsf_vals);
+            
+          }
+
+          //////////////////////////////////////////////////////
+          /////// RSF-based movement, biomass input type //////
+          ////////////////////////////////////////////////////
+
+          //base movement based on preference for higher biomass
+          //for now, just using sample map with integers. 
+          //It so happens that generally,the higher integer map has higher biomass (ran some tests with Don's equations)
+          //later, will want to convert the integers to maps with actual modeled biomass differences
+
+          if(pref==1){
+            
+            //get rsf vals for all cells and subset to cells selected in set
+            //double* cent_rsf = acent3.colptr(2);
+            //arma::colvec cent_rsf_cv = acent3.col(2);
+            
+            //convert to arma vec
+            arma::vec cent_rsf = arma::conv_to<arma::vec>::from(arma::colvec(acent3.col(2)));
+            
+            //subset to get rsf_vals of cells in selected set
+            arma::vec biomass_vals = cent_rsf(set);
+
+            //calculate total biomass of selected set
+            double total_biomass = sum(biomass_vals);
+
+            //calculate probability based on proportion of biomass out of total sum
+            arma::vec biomass_probs = biomass_vals/total_biomass;
+
+            //use rsf_vals as probabilities for which cell to move to
+            truemin = Rcpp::RcppArmadillo::sample(set,1,0,biomass_probs);
             
           }
           
@@ -218,7 +282,7 @@ struct MoveLoop : public Worker {
           //there should always be a possible cell to move to (unless barriers introduced in model)
           //currently, if no cells in set, should generate error
           //this will output unrealistic location number that can be used in R script to generate error
-          outpop(j,0)=acent.nrow()+1000;
+          outpop(j,0)=acent.nrow()+10000000;
           
         }
         

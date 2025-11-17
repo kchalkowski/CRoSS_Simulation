@@ -32,13 +32,15 @@ Initialize_Population<-function(grid_list,N0,dist_start){
     
     #Initialize the population matrix
     #each row is a caribou
-    pop<-matrix(nrow=length(init_locs),ncol=6)
+    pop<-matrix(nrow=length(init_locs),ncol=8)
     pop[,1]=1
     pop[,3]=init_locs #this will be grid location (row number)
     pop[,4]=0 #this will be assigned movement distance
     pop[,5]=centroids[pop[,3],1] #present location X 
     pop[,6]=centroids[pop[,3],2] #present location Y
-
+    pop[,7]=1 #this will be behavioral state (based on row of mv_jday), starting with calving
+    pop[,8]=8 #column of grid to use for selection preference for current state movement
+    
     #display current lc vals in pop mat
     pop[,2]=grid[pop[,3],8]
     
@@ -49,7 +51,7 @@ Initialize_Population<-function(grid_list,N0,dist_start){
   ## Tidying outputs -----------
   
   #add column names
-  colnames(pop)=c("N","lc","cell","dist","ctrx","ctry")
+  colnames(pop)=c("N","lc","cell","dist","ctrx","ctry","state","gridcol")
   
   #error catches
   if(any(pop[,3]>nrow(centroids))){

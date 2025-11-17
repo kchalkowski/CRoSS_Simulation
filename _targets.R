@@ -21,6 +21,7 @@ tar_config_set(
 #Source functions in pipeline
 lapply(list.files(file.path("Scripts/R_Functions"), full.names = TRUE, recursive = TRUE), source)
 
+
 #set options
 options(clustermq.scheduler="multicore")
 
@@ -35,7 +36,8 @@ tar_option_set(packages = c("tidyr",
                             "terra",
                             "lubridate",
                             "ggplot2",
-                            "mapview"))
+                            "mapview",
+                            "RcppParallel"))
 
 # Pipeline ---------------------------------------------------------
 
@@ -46,6 +48,11 @@ list(
   ### Input paths to raw data -----------
   tar_target(Input_folder,
              file.path("Input"),
+             format="file"),
+  
+  ## Input cpp scripts as files to enable tracking -----  
+  tar_target(Caribou_Movement_Script,
+             file.path("Scripts","cpp_Functions","Caribou_Movement.cpp"),
              format="file"),
   
   ## Read data ----- 
@@ -96,9 +103,9 @@ list(
                  N0=100, #Number of caribou in simulation
                  dist_start=10000, #Maximum distance from calving area centerpoint to initialize caribou
                  akc3, 
+                 cpp_functions=list(Caribou_Movement_Script),
                  out.opts=c("init_locs") #outputs (see end of this script for list of options)
                  ))#,
-  
 )
 
 #out.opts: options for outputs from simulation

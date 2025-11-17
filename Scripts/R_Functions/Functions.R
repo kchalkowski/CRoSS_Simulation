@@ -137,9 +137,18 @@ Run_Simulation<-function(grid_list,
                          N0,
                          dist_start,
                          akc3,
+                         cpp_functions,
                          out.opts=NULL){
   out.list=vector(mode="list",length=0)
   
+  # Initialize cpp functions -----
+  #for(i in 1:length(cpp_functions)){
+    #print(paste0("sourcing ",cpp_functions[[i]]))
+    #Rcpp::sourceCpp(cpp_functions[[i]])
+  #}
+  Rcpp::sourceCpp(cpp_functions[[1]])
+  
+  print("sourced cpp script")
   # Initialize caribou on landscape ---------
   pop<-Initialize_Population(grid_list,N0,dist_start)
   

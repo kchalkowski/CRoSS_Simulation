@@ -247,8 +247,8 @@ Process_Outputs<-function(output_list,grid_list,akc3){
       simplify=FALSE
       )
     
-    lines_list=lapply(track_list, ConvertSFtoLines)
-    lines=do.call(rbind,lines_list)
+    lines=lapply(track_list, ConvertSFtoLines)
+    #lines=do.call(rbind,lines_list)
     
     templist=vector(mode="list",length=1)
     templist[[1]]=lines

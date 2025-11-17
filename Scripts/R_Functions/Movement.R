@@ -19,5 +19,9 @@ Movement=function(pop,centroids,shape,rate){
   #update lc vals of current new cell to pop
   pop[,2]=centroids[pop[,3],3]
   
+  #update x and y vals of current new cell to pop
+  pop[,5]=centroids[pop[,3],1] #x
+  pop[,6]=centroids[pop[,3],2] #x
+  
   return(pop)
 }

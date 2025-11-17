@@ -131,6 +131,24 @@ Move_Jday<-function(){
   return(mv_jday)
 }
 
+#Helper function - convert cell number/centroid row number to x/y coords
+CentroidsRowtoXY<-function(locs,centroids,ras){
+  clocs=centroids[as.integer(locs),c(1,2)]
+  ccol=round(clocs[,1])
+  crow=round(clocs[,2])
+  
+  cx=terra::xFromCol(ras,ccol)
+  cy=terra::yFromRow(ras,crow)
+  xy=data.frame("x"=cx,"y"=cy)
+  
+  return(xy)
+}
+
+ConvertSFtoLines<-function(x){
+  x=sf::st_as_sf(as.data.frame(x),coords=c(1,2),crs=st_crs(6393))
+  x %>% st_combine() %>% st_cast("LINESTRING")
+}
+
 # Run simulation ---------
 Run_Simulation<-function(grid_list,
                          mv_jday,
@@ -149,6 +167,8 @@ Run_Simulation<-function(grid_list,
   Rcpp::sourceCpp(cpp_functions[[1]])
   
   print("sourced cpp script")
+  
+  
   # Initialize caribou on landscape ---------
   pop<-Initialize_Population(grid_list,N0,dist_start)
   
@@ -157,18 +177,11 @@ Run_Simulation<-function(grid_list,
     if("init_locs"%in%out.opts){
       templist=vector(mode="list",length=1)
       centroids=grid_list$centroids
-      clocs=centroids[pop[,3],c(1,2)]
-      ccol=round(clocs[,1])
-      crow=round(clocs[,2])
+      cdf=CentroidsRowtoXY(pop[,3],centroids,akc3)
       
-      cx=terra::xFromCol(akc3,ccol)
-      cy=terra::yFromRow(akc3,crow)
-      
-      cdf=data.frame("x"=cx,"y"=cy)
-      
-      templist[[1]]=sf::st_as_sf(as.data.frame(cdf),coords=c(1,2),crs=st_crs(6393))
+      templist[[1]]=cdf
       out.list=append(out.list,templist)
-      
+      names(out.list)[[length(out.list)]]="init_locs"
       }
     
   }
@@ -189,20 +202,62 @@ Run_Simulation<-function(grid_list,
   }
   
   print("starting movement")
-  
+
       for(d in 1:365){
-      print(d)
       pop=Movement(pop,centroids,shape,rate)
       if(tracking){
       loc_mat=cbind(loc_mat,pop[,3])
       }
       }
-    
   
-  
+  # Output tracking object ---------
+  if(!missing(out.opts)){
+    if("tracking"%in%out.opts){
+      templist=vector(mode="list",length=1)
+      
+      templist[[1]]=loc_mat
+      out.list=append(out.list,templist)
+      names(out.list)[[length(out.list)]]="tracking"
+    }
+  }
   return(out.list)
   
 }
+
+Process_Outputs<-function(output_list,centroids,akc3){
+  processed_outputs=vector(mode="list",length=0)
+  outputs=names(output_list)
+  
+  if("init_locs"%in%outputs){
+  init_locs=output_list$init_locs
+  init_locs_out=sf::st_as_sf(as.data.frame(init_locs),coords=c(1,2),crs=st_crs(6393))
+  
+  templist=vector(mode="list",length=1)
+  templist[[1]]=init_locs_out
+  processed_outputs=append(processed_outputs,templist)
+  names(processed_outputs)[[length(processed_outputs)]]="init_locs"
+  }
+  
+  if("tracking"%in%outputs){
+    tracking=output_list$tracking
+    track_list=
+      apply(tracking,1, function(x)
+      CentroidsRowtoXY(x,centroids,akc3),
+      simplify=FALSE
+      )
+    
+    lines_list=lapply(track_list, ConvertSFtoLines)
+    lines=do.call(rbind,lines_list)
+    
+    templist=vector(mode="list",length=1)
+    templist[[1]]=lines
+    processed_outputs=append(processed_outputs,templist)
+    names(processed_outputs)[[length(processed_outputs)]]="tracking"
+  }
+  
+  return(processed_outputs)
+  
+  }
 
 
 

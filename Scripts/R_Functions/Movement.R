@@ -1,16 +1,17 @@
-#This doesn't work yet, adapting Rcpp function for caribou movement
-Movement=function(pop,centroids,shape,rate,inc,mv_pref,dist=NULL){
+#This doesn't work fully yet, adapting Rcpp function for caribou movement
+Movement=function(pop,centroids,shape,rate){
 
   #get distances from gamma distribution
   pop[,4]=rgamma(nrow(pop),shape=shape,rate=rate)
   
-  #set those less than inc to 0
-  pop[pop[,4]<inc,][,4]=0 
+  #set those less than grid resolution to 0
+  pop[pop[,4]<1.0,][,4]=0 
   
   #move
-  #Note: inputs 2 and 3 are unneeded, leaving as placeholders while movement functions are coded
+  #Note: input 2 is unneeded, leaving as placeholder while movement functions are coded
   #mv_pref determines type of movement options. 2 is only option available, see cpp script for more details
-  m1=parallelMovementRcpp_portion(pop,pop[,1,drop=FALSE],pop[,1,drop=FALSE],centroids,1)
+  #apoplocs is current location, needed for when distance=0, stays in same cell
+  m1=parallelMovementRcpp_portion(pop,pop[,1,drop=FALSE],pop[,3,drop=FALSE],centroids,1)
 
   #update locations
   pop[,3]=m1

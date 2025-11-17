@@ -177,10 +177,28 @@ Run_Simulation<-function(grid_list,
   shape=mv_jday$sl_shp[1] #hard coding these for now
   rate=mv_jday$sl_rat[1]
   
-  for(d in 1:365){
-  
-    
+  if(!missing(out.opts)){
+    if("tracking"%in%out.opts){
+      tracking<-TRUE
+      loc_mat=pop[,3]
+    } else{
+      tracking<-FALSE
+    }
+  } else{
+    tracking<-FALSE
   }
+  
+  print("starting movement")
+  
+      for(d in 1:365){
+      print(d)
+      pop=Movement(pop,centroids,shape,rate)
+      if(tracking){
+      loc_mat=cbind(loc_mat,pop[,3])
+      }
+      }
+    
+  
   
   return(out.list)
   

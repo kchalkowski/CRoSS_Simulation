@@ -178,7 +178,7 @@ Behav_St_Changes<-function(d,pop,mv_jday,grid){
     #need to create object with 1/0 if in the winter/summer/calving ranges...
     #for now just ask if within 30 km of centroid...
     m.ind=which(pop[,7]==3)
-    w.ind=which(grid[pop[m.ind,3],11]<30000)
+    w.ind=which(grid[pop[m.ind,3],11]<30)
     pop[m.ind[w.ind],7]<-4
     pop[m.ind[w.ind],8]<-8
     pop[m.ind[w.ind],9]=mv_jday[4,2]
@@ -198,7 +198,7 @@ Behav_St_Changes<-function(d,pop,mv_jday,grid){
     #need to create object with 1/0 if in the winter/summer/calving ranges...
     #for now just ask if within 30 km of centroid...
     m.ind=which(pop[,7]==5)
-    w.ind=which(grid[pop[m.ind,3],9]<30000)
+    w.ind=which(grid[pop[m.ind,3],9]<30)
     pop[m.ind[w.ind],7]<-1
     pop[m.ind[w.ind],8]<-8
     pop[m.ind[w.ind],9]=mv_jday[1,2]
@@ -242,7 +242,11 @@ Run_Simulation<-function(grid_list,
       templist[[1]]=cdf
       out.list=append(out.list,templist)
       names(out.list)[[length(out.list)]]="init_locs"
-      }
+    }
+    
+    if("all_pop"%in%out.opts){
+      all_pop=vector(mode="list",length=365)
+    }
     
   }
   
@@ -265,6 +269,11 @@ Run_Simulation<-function(grid_list,
 
       #for(d in 1:365){
       for(d in 1:365){
+        
+      if("all_pop"%in%out.opts){
+      all_pop[[d]]<-pop
+      }
+        
       print(d)
       pop=Movement(pop,centroids,shape,rate)
       if(tracking){
@@ -277,17 +286,47 @@ Run_Simulation<-function(grid_list,
   if(!missing(out.opts)){
     if("tracking"%in%out.opts){
       templist=vector(mode="list",length=1)
-      
       templist[[1]]=loc_mat
       out.list=append(out.list,templist)
       names(out.list)[[length(out.list)]]="tracking"
+    }
+    if("all_pop"%in%out.opts){
+      templist=vector(mode="list",length=1)
+      templist[[1]]=all_pop
+      out.list=append(out.list,templist)
+      names(out.list)[[length(out.list)]]="all_pop"
     }
   }
   return(out.list)
   
 }
 
-Process_Outputs<-function(output_list,grid_list,akc3){
+#Helper function
+add_cols_track<-function(track, mv_jday){
+  track$day=1:nrow(track)
+  track$state=1
+  track$state[track$day>=mv_jday$start[2]]<-2
+  track$state[track$day>=mv_jday$start[3]]<-3
+  track$state[track$day>=mv_jday$start[5]]<-5
+  
+  return(track)
+}
+
+#Helper function
+ConvertSFtoStateLines<-function(x){
+  x=sf::st_as_sf(as.data.frame(x),coords=c(1,2),crs=st_crs(6393))
+  
+  l1=st_as_sf(x[x$state==1,] %>% st_combine() %>% st_cast("LINESTRING"))
+  l2=st_as_sf(x[x$state==2,] %>% st_combine() %>% st_cast("LINESTRING"))
+  l3=st_as_sf(x[x$state==3,] %>% st_combine() %>% st_cast("LINESTRING"))
+  l5=st_as_sf(x[x$state==5,] %>% st_combine() %>% st_cast("LINESTRING"))
+  
+  x1=rbind(l1,l2,l3,l5)
+  x1$state=c("calving","summer","fallwinter","spring")
+  return(x1)
+  }
+
+Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
   centroids=grid_list$centroids
   processed_outputs=vector(mode="list",length=0)
   outputs=names(output_list)
@@ -310,13 +349,20 @@ Process_Outputs<-function(output_list,grid_list,akc3){
       simplify=FALSE
       )
     
-    lines=lapply(track_list, ConvertSFtoLines)
-    #lines=do.call(rbind,lines_list)
-    
+    track_list2=lapply(track_list,add_cols_track, mv_jday=mv_jday)
+    lines=lapply(track_list2, ConvertSFtoStateLines)
+
     templist=vector(mode="list",length=1)
     templist[[1]]=lines
     processed_outputs=append(processed_outputs,templist)
     names(processed_outputs)[length(processed_outputs)]="tracking"
+  }
+  
+  if("all_pop"%in%outputs){
+    templist=vector(mode="list",length=1)
+    templist[[1]]=output_list$all_pop
+    processed_outputs=append(processed_outputs,templist)
+    names(processed_outputs)[length(processed_outputs)]="all_pop"
   }
   
   return(processed_outputs)

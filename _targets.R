@@ -104,14 +104,15 @@ list(
                  dist_start=100, #Maximum distance from calving area centerpoint to initialize caribou
                  akc3, 
                  cpp_functions=list(Caribou_Movement_Script),
-                 out.opts=c("init_locs","tracking") #outputs (see end of this script for list of options)
+                 out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
                  )),
   
   ## Process outputs ----- 
   tar_target(processed_outputs,
-             Process_Outputs(output_list,grid_list,akc3))#,
+             Process_Outputs(output_list,grid_list,akc3,mv_jday))#,
 )
 
 #out.opts: options for outputs from simulation
   #init_locs: output sf data frame with initial locations of caribou
   #tracking: output moved locations of caribou
+  #all_pop: output list of pop matrices for each day of simulation

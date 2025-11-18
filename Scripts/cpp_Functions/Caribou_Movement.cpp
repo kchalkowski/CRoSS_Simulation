@@ -160,7 +160,7 @@ struct MoveLoop : public Worker {
             //1, 2, 4 just use NLCD selection
             //3, 5 is migratory selection
 
-          //Currently, this variable is not used for anything
+          //
           int behav_stat = apop3(j,6);
           
           ///////////////////////////////////////

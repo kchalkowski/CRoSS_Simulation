@@ -161,7 +161,7 @@ struct MoveLoop : public Worker {
             //3, 5 is migratory selection
 
           //Currently, this variable is not used for anything
-          //int behav_stat = apop3(j,6);
+          int behav_stat = apop3(j,6);
           
           ///////////////////////////////////////
           /////// Distance-based movement //////
@@ -238,9 +238,9 @@ struct MoveLoop : public Worker {
             
           }
 
-          //////////////////////////////////////////////////////
-          /////// RSF-based movement, biomass input type //////
-          ////////////////////////////////////////////////////
+          //////////////////////////////////////////////////////////////////////////////
+          /////// RSF-based movement, biomass input type, with behavioral switch //////
+          ////////////////////////////////////////////////////////////////////////////
 
           //base movement based on preference for higher biomass
           //for now, just using sample map with integers. 
@@ -249,25 +249,103 @@ struct MoveLoop : public Worker {
 
           if(pref==1){
             
-            //get rsf vals for all cells and subset to cells selected in set
-            //double* cent_rsf = acent3.colptr(2);
-            //arma::colvec cent_rsf_cv = acent3.col(2);
             
-            //convert to arma vec
-            arma::vec cent_rsf = arma::conv_to<arma::vec>::from(arma::colvec(acent3.col(2)));
+
+            if(behav_stat==1 | behav_stat==2 | behav_stat == 4){ //calving, summer, winter
+              //get rsf vals for all cells and subset to cells selected in set
+              //double* cent_rsf = acent3.colptr(2);
+              //arma::colvec cent_rsf_cv = acent3.col(2);
+              
+              //convert to arma vec
+              arma::vec cent_rsf = arma::conv_to<arma::vec>::from(arma::colvec(acent3.col(2)));
             
-            //subset to get rsf_vals of cells in selected set
-            arma::vec biomass_vals = cent_rsf(set);
+              //subset to get rsf_vals of cells in selected set
+              //add 0.01 to prevent NA probabilities
+              arma::vec biomass_vals = cent_rsf(set)+0.01;
 
-            //calculate total biomass of selected set
-            double total_biomass = sum(biomass_vals);
+              //calculate total biomass of selected set
+              double total_biomass = sum(biomass_vals);
 
-            //calculate probability based on proportion of biomass out of total sum
-            arma::vec biomass_probs = biomass_vals/total_biomass;
+              //calculate probability based on proportion of biomass out of total sum
+              arma::vec biomass_probs = biomass_vals/total_biomass;
 
-            //use rsf_vals as probabilities for which cell to move to
-            truemin = Rcpp::RcppArmadillo::sample(set,1,0,biomass_probs);
+              //use rsf_vals as probabilities for which cell to move to
+              truemin = Rcpp::RcppArmadillo::sample(set,1,0,biomass_probs);
+            } //behavstat NLCD switch
+
+            if(behav_stat==3){
+              //select wintering grounds distances
+              arma::vec cent_rsf = arma::conv_to<arma::vec>::from(arma::colvec(acent3.col(5)));
             
+              //subset to get rsf_vals of cells in selected set
+              arma::vec dist_vals = cent_rsf(set);
+
+              //calculate total biomass of selected set
+              //double total_biomass = sum(dist_vals);
+
+              //calculate probability based on proportion of biomass out of total sum
+              //invert it because otherwise further distances are higher probability
+              //add small amt to zeros to avoid NA by dividing by zero
+              //arma::vec biomass_probs_0 = (biomass_vals)/total_biomass;
+              //arma::vec biomass_probs = 1-biomass_probs_0;
+              //get minimum distance value
+              double mindistvals = dist_vals.min();
+              arma::ivec distmask(dist_vals.n_rows);
+            
+              //Return indices of set which are equal to the minimum abundance value
+              for(std::size_t p = 0; p < dist_vals.n_rows; ++p){
+                if(dist_vals(p)==mindistvals) distmask[p]=1; //set poplocs mask to 1 if any loc matches cell in set
+                else distmask[p]=0;
+              }
+
+              arma::uvec cellindarma = set.elem(find(distmask==1));
+
+              //if there are more than 1 cell with same minimum abundance, choose one at random
+              if(cellindarma.size()>1){
+                truemin = Rcpp::RcppArmadillo::sample(cellindarma,1,false);
+              
+              } else {
+                truemin = cellindarma;
+              } 
+
+            }
+
+            if(behav_stat==5){
+              //select calving grounds distances
+              arma::vec cent_rsf = arma::conv_to<arma::vec>::from(arma::colvec(acent3.col(3)));
+              //subset to get rsf_vals of cells in selected set
+              arma::vec dist_vals = cent_rsf(set);
+
+              //calculate total biomass of selected set
+              //double total_biomass = sum(dist_vals);
+
+              //calculate probability based on proportion of biomass out of total sum
+              //invert it because otherwise further distances are higher probability
+              //add small amt to zeros to avoid NA by dividing by zero
+              //arma::vec biomass_probs_0 = (biomass_vals)/total_biomass;
+              //arma::vec biomass_probs = 1-biomass_probs_0;
+              //get minimum distance value
+              double mindistvals = dist_vals.min();
+              arma::ivec distmask(dist_vals.n_rows);
+            
+              //Return indices of set which are equal to the minimum abundance value
+              for(std::size_t p = 0; p < dist_vals.n_rows; ++p){
+                if(dist_vals(p)==mindistvals) distmask[p]=1; //set poplocs mask to 1 if any loc matches cell in set
+                else distmask[p]=0;
+              }
+
+              arma::uvec cellindarma = set.elem(find(distmask==1));
+
+              //if there are more than 1 cell with same minimum abundance, choose one at random
+              if(cellindarma.size()>1){
+                truemin = Rcpp::RcppArmadillo::sample(cellindarma,1,false);
+              
+              } else {
+                truemin = cellindarma;
+              } 
+            
+            }
+
           }
           
           //////////////////////////////////////////////////////////////////

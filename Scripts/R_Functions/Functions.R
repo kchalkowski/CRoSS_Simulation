@@ -88,7 +88,7 @@ Distance_Ranges<-function(range_list,akc3){
 
 
 Append_Each_Dist<-function(distr,grid,name){
-  distvals=values(distr)
+  distvals=round(values(distr)/1000,0)
   grid$grid=cbind(grid$grid,distvals)
   colnames(grid$grid)[ncol(grid$grid)]=name
   grid$centroids=cbind(grid$centroids,distvals)
@@ -121,8 +121,8 @@ Move_Jday<-function(){
                 "falmigr",
                 "winter",
                 "sprmigr")
-  mv_jday[,2]=0.7515
-  mv_jday[,3]=0.3550
+  mv_jday[,2]=c(5,5,10.0,5,10.0)
+  mv_jday[,3]=c(0.3550,0.3550,0.3,0.3550,0.3)
   mv_jday[,4]=c(0,0,1,0,1)
   mv_jday[,5]=c(1,2,3,3,1)
   mv_jday[,6]=c(1,61,151,0,301)
@@ -144,9 +144,69 @@ CentroidsRowtoXY<-function(locs,centroids,ras){
   return(xy)
 }
 
+#Helper function
 ConvertSFtoLines<-function(x){
   x=sf::st_as_sf(as.data.frame(x),coords=c(1,2),crs=st_crs(6393))
   x %>% st_combine() %>% st_cast("LINESTRING")
+}
+
+#Do behavorial state changes by day/location
+Behav_St_Changes<-function(d,pop,mv_jday,grid){
+  
+  #pull state changes from mv_jday
+  cal_sum=mv_jday$start[2]
+  sum_fal=mv_jday$start[3]
+  win_spr=mv_jday$start[5]
+  
+  #Calving switch to summer
+  if(d==cal_sum){
+    pop[,7]=2
+    pop[,9]=mv_jday[2,2]
+    pop[,10]=mv_jday[2,3]
+  }
+  
+  #Summer switch to fall
+  if(d==sum_fal){
+    pop[,7]=3  
+    pop[,8]=11
+    pop[,9]=mv_jday[3,2]
+    pop[,10]=mv_jday[3,3]
+  }
+  
+  #fall switch to winter
+  if(d>sum_fal&any(pop[,7]==3)){
+    #need to create object with 1/0 if in the winter/summer/calving ranges...
+    #for now just ask if within 30 km of centroid...
+    m.ind=which(pop[,7]==3)
+    w.ind=which(grid[pop[m.ind,3],11]<30000)
+    pop[m.ind[w.ind],7]<-4
+    pop[m.ind[w.ind],8]<-8
+    pop[m.ind[w.ind],9]=mv_jday[4,2]
+    pop[m.ind[w.ind],10]=mv_jday[4,3]
+  }
+  
+  #winter switch to spring
+  if(d==win_spr){
+    pop[,7]=5
+    pop[,8]=9
+    pop[,9]=mv_jday[5,2]
+    pop[,10]=mv_jday[5,3]
+  }
+  
+  #spring migr switch to calving
+  if(d>win_spr){
+    #need to create object with 1/0 if in the winter/summer/calving ranges...
+    #for now just ask if within 30 km of centroid...
+    m.ind=which(pop[,7]==5)
+    w.ind=which(grid[pop[m.ind,3],9]<30000)
+    pop[m.ind[w.ind],7]<-1
+    pop[m.ind[w.ind],8]<-8
+    pop[m.ind[w.ind],9]=mv_jday[1,2]
+    pop[m.ind[w.ind],10]=mv_jday[1,3]
+  }
+  
+  return(pop)
+  
 }
 
 # Run simulation ---------
@@ -170,7 +230,7 @@ Run_Simulation<-function(grid_list,
   
   
   # Initialize caribou on landscape ---------
-  pop<-Initialize_Population(grid_list,N0,dist_start)
+  pop<-Initialize_Population(grid_list,N0,dist_start,mv_jday)
   
   # Output initial condition objects ---------
   if(!missing(out.opts)){
@@ -203,11 +263,14 @@ Run_Simulation<-function(grid_list,
   
   print("starting movement")
 
+      #for(d in 1:365){
       for(d in 1:365){
+      print(d)
       pop=Movement(pop,centroids,shape,rate)
       if(tracking){
       loc_mat=cbind(loc_mat,pop[,3])
       }
+      pop=Behav_St_Changes(d,pop,mv_jday,grid_list$grid)
       }
   
   # Output tracking object ---------

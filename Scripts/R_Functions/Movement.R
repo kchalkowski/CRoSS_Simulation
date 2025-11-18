@@ -1,11 +1,20 @@
 #This doesn't work fully yet, adapting Rcpp function for caribou movement
 Movement=function(pop,centroids,shape,rate){
-
+  nshp=unique(pop[,9])
+  nrat=unique(pop[,10])
+  
+  if(length(nshp)==1&length(nrat)==1){
   #get distances from gamma distribution
   pop[,4]=rgamma(nrow(pop),shape=shape,rate=rate)
+  #need incorp vairable shape/rate
+  } else{
+    for(i in 1:length(nshp)){
+    pop[which(pop[,9]==nshp[i]),4]=rgamma(length(pop[which(pop[,9]==nshp[i]),4]),shape=nshp[i],rate=nrat[i])
+    }
+  }
   
   #set those less than grid resolution to 0
-  pop[pop[,4]<1.0,][,4]=0 
+  pop[pop[,4]<1.0,4]=0 
   
   #move
   #Note: input 2 is unneeded, leaving as placeholder while movement functions are coded

@@ -101,7 +101,7 @@ list(
   Run_Simulation(grid_list,
                  mv_jday,
                  N0=100, #Number of caribou in simulation
-                 dist_start=10000, #Maximum distance from calving area centerpoint to initialize caribou
+                 dist_start=100, #Maximum distance from calving area centerpoint to initialize caribou
                  akc3, 
                  cpp_functions=list(Caribou_Movement_Script),
                  out.opts=c("init_locs","tracking") #outputs (see end of this script for list of options)

@@ -15,16 +15,25 @@ tar_manifest()
 tar_make()
 #tar_make_clustermq(workers = 6)
 
+
+#Interactive troubleshooting
+#checking outputs
+library(mapview)
+library(sf)
+
 range_dist_sprc<-tar_read(range_dist_sprc)
-grid2<-tar_read(grid2)
 
 
-
-line1=out$tracking[[1]]
-mapview(line1)
-
-
-line2=out$tracking[[2]]
+out<-tar_read(processed_outputs)
+line2=out$tracking[[1]]
 mapview(line2)
-#movements aren't drifting, staying in one place and around center
-#need make sure they're getting updated at each timestep
+mapview(line2)+mapview(range_dist_sprc[3])
+
+PT2=line2 %>% st_sf %>% st_cast("POINT")
+
+grid_list<-tar_read(grid_list)
+centroids=grid_list$centroids
+
+range_dist_sprc<-tar_read(range_dist_sprc)
+
+hist(rgamma(100,shape=10,rate=0.3))

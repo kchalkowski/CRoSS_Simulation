@@ -1,5 +1,5 @@
 #This doesn't work fully yet, adapting Rcpp function for caribou movement
-Movement=function(pop,centroids,shape,rate){
+Movement=function(pop,centroids,shape,rate,cent_col){
   nshp=unique(pop[,9])
   nrat=unique(pop[,10])
   
@@ -20,7 +20,7 @@ Movement=function(pop,centroids,shape,rate){
   #Note: input 2 is unneeded, leaving as placeholder while movement functions are coded
   #mv_pref determines type of movement options. 2 is only option available, see cpp script for more details
   #apoplocs is current location, needed for when distance=0, stays in same cell
-  m1=parallelMovementRcpp_portion(pop,pop[,1,drop=FALSE],pop[,3,drop=FALSE],centroids,1)
+  m1=parallelMovementRcpp_portion(pop,pop[,1,drop=FALSE],pop[,3,drop=FALSE],centroids,1,cent_col)
 
   #update locations
   pop[,3]=m1

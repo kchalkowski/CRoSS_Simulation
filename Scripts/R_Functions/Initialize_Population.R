@@ -14,10 +14,14 @@
 #for pop_init_type="init_single", need a vector with init_loc (cell number to initialize group/individual) and n (number of individuals to initialize)
 #pop_init_type: string, "init_pop" or "init_single"
 #pop_init_grid_opts: string, "homogeneous" or "ras" or "heterogeneous"
-Initialize_Population<-function(grid_list,N0,dist_start,mv_jday){
+Initialize_Population<-function(grid_list,N0,dist_start,mv_jday,sample_input){
   grid=grid_list$grid
   centroids=grid_list$centroids
+  if(!sample_input){
   ind=which(centroids[,which(colnames(centroids)=="calving_area.kmz") ]<dist_start)
+  } else{
+  ind=which(centroids[,which(colnames(centroids)=="p1") ]<dist_start)
+  	}
   
   ## Initialize population ----------------------
   

@@ -37,6 +37,9 @@
 #optional: grid.opt, 
 #Make_Grid(object)
 
+#if grid.opt="homogeneous"
+#object is c(len,inc)
+
 Make_Grid<-function(object,grid.opt="homogeneous",sample=0,sample.design=NULL){
   require(terra)
   #require(NLMR)
@@ -62,7 +65,6 @@ Make_Grid<-function(object,grid.opt="homogeneous",sample=0,sample.design=NULL){
     }
     
   }
-  
   
   #get number of cells in grid
   cells=len^2

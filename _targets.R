@@ -96,7 +96,6 @@ list(
 	
 	)
 
-
 #out.opts: options for outputs from simulation
   #init_locs: output sf data frame with initial locations of caribou
   #tracking: output moved locations of caribou

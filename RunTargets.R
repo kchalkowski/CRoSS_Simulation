@@ -13,5 +13,3 @@ tar_manifest()
 
 #Make pipeline
 tar_make()
-
-

@@ -1,76 +1,8 @@
 
-## Read data ----- 
-ReadBiomass<-function(path){
-  read.csv(file.path(path,"test_biomass.csv"))
-}
-
-ReadAKNLCD<-function(path){
-  terra::rast(file.path(path,"NLCD_2016_Land_Cover_AK_20200724","NLCD_2016_Land_Cover_AK_20200724.img"))
-  
-  
-  }
-
-ReadRanges<-function(path){
-  range_files=list.files(file.path(path,"Mock_Shapefiles"))
-  calving=st_read(file.path(path,"Mock_Shapefiles","calving_area.kmz"))
-  range_list=vector(mode="list",length=length(range_files))
-  names(range_list)=range_files
-  for(f in 1:length(range_files)){
-    range_list[[f]]=st_read(file.path(path,"Mock_Shapefiles",range_files[f]))
-  }
-  return(range_list)
-    }
-
-
-## Set up landscape data for simulation ----- 
-
-Refactor_AK<-function(akc,type,res=NULL,fact=NULL){
-  if(type=="factor"){
-    akc_out=aggregate(akc,fact=fact,fun=mean)  
-  } 
-  
-  if(type=="res"){
-    akcr=akc
-    res(akcr)=res
-    akc_out=resample(akc,akcr,method="near")
-  }
-  return(akc_out)
-}
-
-Transform_AK<-function(akc){
-  new_crs="EPSG:6393"
-  terra::project(akc,new_crs)
-}
-
-Recode_AK<-function(akc){
-  akc[akc==11|akc==12|akc==31]<-1 #barren
-  akc[akc==0|akc==21|akc==22|akc==23|akc==24|akc==81|akc==82]<-0 #no data
-  akc[akc==41|akc==42|akc==43|akc==90]<-2 #forest
-  akc[akc==51|akc==52|akc==71|akc==72|akc==74|akc==95]<-3 #herb/shrub
-
-  return(akc)
-}
-
-Crop_Raster<-function(akc2){
-  akc2[1:1335,1592:2926,drop=FALSE]
-}
-
-# Convert recoded AK map into matrix for simulation ---------
-Convert_toGrid<-function(akc3){
-  #input ras needs be square, hence subset
-  Make_Grid(akc3)
-}
-
 # Get distance rasters and append to grid ---------
-
-#Helper function: Transform to raster type
-Transform_CRS_Albers<-function(sfo){
-  st_transform(sfo,crs=st_crs(6393))
-}
 
 #Helper function: Create distance raster from centroid
 Create_Dist_Rast<-function(ctr,ras){
-  #terra::distance(ctr,base_rast)
   ctr_ras=terra::rasterize(ctr,ras)
   terra::distance(ctr_ras)
 }
@@ -171,25 +103,6 @@ Move_Jday<-function(sample_input=TRUE){
   return(mv_jday)
 }
 
-#Helper function - convert cell number/centroid row number to x/y coords
-CentroidsRowtoXY<-function(locs,centroids,ras){
-  clocs=centroids[as.integer(locs),c(1,2)]
-  ccol=round(clocs[,1])
-  crow=round(clocs[,2])
-  
-  cx=terra::xFromCol(ras,ccol)
-  cy=terra::yFromRow(ras,crow)
-  xy=data.frame("x"=cx,"y"=cy)
-  
-  return(xy)
-}
-
-#Helper function
-ConvertSFtoLines<-function(x){
-  x=sf::st_as_sf(as.data.frame(x),coords=c(1,2),crs=st_crs(6393))
-  x %>% st_combine() %>% st_cast("LINESTRING")
-}
-
 #Do behavorial state changes by day/location
 Behav_St_Changes<-function(d,pop,mv_jday,grid){
   
@@ -260,10 +173,6 @@ Run_Simulation<-function(grid_list,
   out.list=vector(mode="list",length=0)
   
   # Initialize cpp functions -----
-  #for(i in 1:length(cpp_functions)){
-    #print(paste0("sourcing ",cpp_functions[[i]]))
-    #Rcpp::sourceCpp(cpp_functions[[i]])
-  #}
   Rcpp::sourceCpp(cpp_functions[[1]])
   
   print("sourced cpp script")
@@ -307,15 +216,11 @@ Run_Simulation<-function(grid_list,
   
   print("starting movement")
 
-      #for(d in 1:365){
-      #for(d in 1:365){
-  		for(d in 1:151){ #error at 152 with sample input     
+  		for(d in 1:365){    
    
       if("all_pop"%in%out.opts){
       all_pop[[d]]<-pop
       }
-        
-      print(d)
       
       #Pull which row in jday based on d
       sel_row=NA
@@ -328,12 +233,13 @@ Run_Simulation<-function(grid_list,
       #convert sel_row to centroids column
       cent_col=sel_row+1 #starts on col 3 of centroids, but starting at 0 index for cpp function
       
+      #do movement
       pop=Movement(pop,centroids,shape,rate,cent_col)
+      
+      #update outputs
       if(tracking){
       loc_mat=cbind(loc_mat,pop[,3])
       }
-      
-      #pop=Behav_St_Changes(d,pop,mv_jday,grid_list$grid)
       
       }
   
@@ -367,20 +273,6 @@ add_cols_track<-function(track, mv_jday){
   return(track)
 }
 
-#Helper function
-ConvertSFtoStateLines<-function(x){
-  x=sf::st_as_sf(as.data.frame(x),coords=c(1,2),crs=st_crs(6393))
-  
-  l1=st_as_sf(x[x$state==1,] %>% st_combine() %>% st_cast("LINESTRING"))
-  l2=st_as_sf(x[x$state==2,] %>% st_combine() %>% st_cast("LINESTRING"))
-  l3=st_as_sf(x[x$state==3,] %>% st_combine() %>% st_cast("LINESTRING"))
-  l5=st_as_sf(x[x$state==5,] %>% st_combine() %>% st_cast("LINESTRING"))
-  
-  x1=rbind(l1,l2,l3,l5)
-  x1$state=c("calving","summer","fallwinter","spring")
-  return(x1)
-  }
-
 Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
   centroids=grid_list$centroids
   processed_outputs=vector(mode="list",length=0)
@@ -388,7 +280,6 @@ Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
   
   if("init_locs"%in%outputs){
   init_locs_out=output_list$init_locs
-  #init_locs_out=sf::st_as_sf(as.data.frame(init_locs),coords=c(1,2),crs=st_crs(6393))
   templist=vector(mode="list",length=1)
   templist[[1]]=init_locs_out
   processed_outputs=append(processed_outputs,templist)
@@ -404,7 +295,6 @@ Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
       )
     
     track_list2=lapply(track_list,add_cols_track, mv_jday=mv_jday)
-    #lines=lapply(track_list2, ConvertSFtoStateLines) #
 
     templist=vector(mode="list",length=1)
     templist[[1]]=track_list2

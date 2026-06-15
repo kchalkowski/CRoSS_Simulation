@@ -1,5 +1,3 @@
-#processed_outputs<-tar_read(processed_outputs)
-#tracking=processed_outputs$tracking
 
 Tracking_Viz<-function(tracking){
 	#tracking is list of tracks in simulation

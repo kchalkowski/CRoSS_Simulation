@@ -59,6 +59,39 @@ intersects=1;
 return(intersects);
 }
 
+//def do_boxes_intersect_2d(a, b):
+//    # Check for separation along the X or Y axis
+//    if a['xmax'] < b['xmin'] or b['xmax'] < a['xmin']:
+//        return False
+//    if a['ymax'] < b['ymin'] or b['ymax'] < a['ymin']:
+//        return False
+//    return True
+int do_boxes_intersect(
+                arma::mat p1,
+                arma::mat p2,
+                arma::mat r1,
+                arma::mat r2){ 
+
+    int boxes_intersect;
+
+    arma::mat px = {{p1(0,0),p2(0,0)}};
+    arma::mat rx = {{r1(0,0),r2(0,0)}};
+    arma::mat py = {{p1(0,1),p2(0,1)}};
+    arma::mat ry = {{r1(0,1),r2(0,1)}};
+                
+                boxes_intersect=1;
+
+                if(px.max() < rx.min() | rx.max() < px.min()){
+                  boxes_intersect=0;
+                }
+
+                if(py.max() < ry.min() | ry.max() < py.min()){
+                  boxes_intersect=0;
+                }
+  
+                return(boxes_intersect);
+                }
+
 /////////////////////////////////////////////////////
 ///////Set up wrapper to run with RcppParallel//////
 ///////////////////////////////////////////////////
@@ -203,15 +236,26 @@ struct MoveLoop : public Worker {
           arma::mat r1 = arma::conv_to<arma::mat>::from(arma::rowvec(road3.row(0)));
           arma::mat r2 = arma::conv_to<arma::mat>::from(arma::rowvec(road3.row(1)));
           
+
+          int bbox_intersects = do_boxes_intersect(p1,p2,r1,r2);
+
+          if(bbox_intersects==1){
+          
           int intersects = lineseg_intersect(p1,p2,r1,r2);
           //Rcout << "intersects" << intersects; 
-
+          
           if(intersects==1){
             ///Rcout << "intersects";
             mask[k]=0;
           } else{
             mask[k]=1;
           }
+
+        } else{ //bbox intersect closing bracket
+          //if bbox doesn't intersect, lines cant intersect
+          //this means the move is valid, doesn't cross a road
+          mask[k]=1; 
+        } 
 
           } else {
             mask[k]=0;    

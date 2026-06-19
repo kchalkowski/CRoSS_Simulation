@@ -14,6 +14,7 @@ tar_manifest()
 #Make pipeline
 tar_make()
 
-#Road effect not working for wah range simulation
-
+#Current problem
+	#impassable barrier is extending beyond start and end point of road
+	#being treated as line rather than line segment
 

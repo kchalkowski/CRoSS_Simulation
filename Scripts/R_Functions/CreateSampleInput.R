@@ -13,7 +13,11 @@ r <- terra::rast(ext = ext_global, resolution = inc)
 
 } else{
 	ranges_sf=do.call(rbind,range_list)
+	
+	#get bbox around ranges
 	rbbox=sf::st_bbox(ranges_sf)
+	
+	#bbox needs to be square
 	len_w=abs(rbbox$xmax-rbbox$xmin)
 	len_h=abs(rbbox$ymax-rbbox$ymin)
 	lendiff=abs(len_w-len_h)
@@ -22,7 +26,14 @@ r <- terra::rast(ext = ext_global, resolution = inc)
 	}
 	if(len_h<len_w){
 	rbbox[4]=rbbox$ymax+lendiff
-		}
+	}
+	
+	#Need some extra buffer around bbox to prevent edge effects
+	rbbox[1]=rbbox[1]-200000
+	rbbox[2]=rbbox[2]-200000
+	rbbox[3]=rbbox[3]+200000
+	rbbox[4]=rbbox[4]+200000
+	
 ext_global <- terra::ext(rbbox)
 r <- terra::rast(ext = ext_global, resolution = inc, crs=crs(ranges_sf))
 }

@@ -239,11 +239,11 @@ Run_Simulation<-function(grid_list,
       rcoords=road_list$coords
       #rcoords[2,1]=rcoords[2,1]-70000
       #rcoords[2,2]=rcoords[2,2]+70000
-      rsf=st_as_sf(as.data.frame(rcoords),coords=c(1,2),crs=st_crs(akc3))
+      rsf=sf::st_as_sf(as.data.frame(rcoords),coords=c(1,2),crs=sf::st_crs(akc3))
       #mapview(wah_r)+mapview(rsf)
       
       #1-get cell number of raster where the coordinates lie
-      cells=cellFromXY(akc3,st_coordinates(rsf))
+      cells=terra::cellFromXY(akc3,st_coordinates(rsf))
       #2-get the x/y of centroids from this
       rcoords_grid=centroids[cells,1:2]
       

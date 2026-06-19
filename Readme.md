@@ -26,8 +26,5 @@ This pipeline in it's current form can run two kinds of movement simulations
 * Add user input in targets to change road parameters
 * Add random generation of polygon/road range option
 
-## Realistic range input
-* Add instructions for WAH range input data (link and how to add to pipeline locally)
-
 
 

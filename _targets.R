@@ -44,48 +44,52 @@ tar_option_set(packages = c("tidyr",
 
 list(
   
-  ## Input data paths -----  
+  ## Input data and source scripts -----  
   
   ### Input paths to raw data -----------
   tar_target(Input_folder,
              file.path("Input"),
              format="file"),
   
-  ## Input cpp scripts as files to enable tracking -----  
+  ### Input cpp scripts as files to enable tracking -----  
   tar_target(Caribou_Movement_Script,
              file.path("Scripts","cpp_Functions","Caribou_Movement_v2.cpp"),
              format="file"),
   
-	## Pull range layers ------------
+	### Pull range layers ------------
 	tar_target(wah_range_layers,Pull_Range_Layers(Input_folder,
 		gdb_filename="kernel_ann_report.gdb",
 		ambler=FALSE)),
 	
-	#Pull ambler road
+	### Pull ambler road ---------
 	tar_target(ambler_layers,Pull_Range_Layers(Input_folder,
 		gdb_filename="AmblerRoad_SupplementalEIS_Project_Options.gdb",
 		ambler=TRUE)),
 	
-	## Sample input setup ------------
+	## Set up simulation input ------------
 	
-	#### Get list of sample seasonal range polygons from sample grid
+	### Get Sample seasonal range polygons -----
 	#Input:
 	#Output: 
 		#range_list- list of simple feature polygons
 	tar_target(range_list,Create_Range_Polygons()),
 	tar_target(wah_ranges,Sample_WAH_Layers(wah_range_layers)),
 
-	#### Create sample raster with same dimensions as sample grid
+	### Create sample raster ------
 	#Input:
 		#len, inc
 	#Output:
 		#r- SpatRaster with len x len dimensions and inc resolution
-	tar_terra_rast(r,Create_Sample_Ras(100,1,sample_input=TRUE,NULL,NULL)),
-	tar_terra_rast(wah_r,Create_Sample_Ras(1,inc=1000,
-																		 sample_input=FALSE,
-																		 crs_input=6393,
-																		 wah_ranges)),
+	tar_terra_rast(r,Create_Sample_Ras(len=100,
+																		 inc=1,
+																		 sample_input=TRUE,
+																		 NULL)),
+	tar_terra_rast(wah_r,Create_Sample_Ras(len=NA,
+																			   inc=1000,
+																				 sample_input=FALSE,
+																				 wah_ranges)),
 	
+	### Make grid object --------
 	#Input: 
 		#object = c(len, inc)
 			#len is num cells on each side
@@ -97,11 +101,11 @@ list(
 	tar_target(wah_grid,Make_Grid(object=wah_r,
 														grid.opt="homogeneous")),
 	
-	#Create sample road dividing ranges 1 and 2
+	### Create sample road --------
+	#divides ranges 1 and 2
 	tar_target(road_list,Create_Sample_Road()),
-	#pull road coordinates for ambler
-	
-	#### Create distance raster collection from sample calving/summer/winter polygons
+
+	### Create distance rasters from range polygons -----
 	#Input: 
 		#range_list
 		#r
@@ -111,7 +115,7 @@ list(
 	tar_terra_sprc(range_dist_sprc,Distance_Ranges(range_list,r,sample_input=TRUE)),
 	tar_terra_sprc(wah_range_dist_sprc,Distance_Ranges(wah_ranges,wah_r,sample_input=TRUE)),
 
-	#### Append sample grid with distance values for each of the three sample ranges
+	### Append sample grid with distance values -------
   #Input: 
 		#grid
 		#range_dist_sprc
@@ -125,7 +129,7 @@ list(
 	tar_target(grid_list,Append_Grid_Distance(grid,range_dist_sprc,range_list,sample_input=TRUE)),
 	tar_target(wah_grid_list,Append_Grid_Distance(wah_grid,wah_range_dist_sprc,wah_ranges,sample_input=FALSE)),
 
-  #### Create dataframe for changing movement by jday ---------
+  ### Create dataframe for changing movement by jday ---------
 	#Input
 		#sample_input- boolean
 	#Output
@@ -178,11 +182,15 @@ list(
 	tar_target(wah_processed_outputs,
              Process_Outputs(wah_output_list,wah_grid_list,wah_r,wah_mv_jday,inc=10000)),
 
-	## Create animation of movement from tracking output-----
+	## Create visual outputs -------
+	
+	### Create animation of movement from tracking output -----
+	#Create animation of sample run
 	tar_target(string_out,Tracking_Viz(processed_outputs$tracking,
 																		 filename="sample_gif.gif",
 																		 sample_input=TRUE)),
 	
+	# Create animation of WAH range movements
 	tar_target(wah_string_out,
 		Tracking_Viz(wah_processed_outputs$tracking,
 								 filename="wah_gif.gif",

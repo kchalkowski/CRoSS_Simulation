@@ -25,7 +25,8 @@ Tracking_Viz<-function(tracking,
 	require(rnaturalearth)
 	require(rnaturalearthdata)
 	if(!is.null(akc3)){
-	tracksf=sf::st_as_sf(trackdf,coords=c(1,2),crs=sf::st_crs(range_list$p1))
+
+	tracksf=sf::st_as_sf(trackdf,coords=c(1,2),crs=sf::st_crs(range_list[[1]]))
 	world <- ne_countries(scale='medium',returnclass = 'sf')
 	usa <- subset(world, admin == "United States of America")
 	alaska <- ggplot(data = usa) +
@@ -48,7 +49,7 @@ Tracking_Viz<-function(tracking,
   				mapping=aes(colour = state),alpha = 0.7, show.legend = FALSE)+
 	scale_colour_manual(values=c("turquoise","magenta"))+
   geom_sf(data=road,show.legend = FALSE)+
-	coord_sf(crs = sf::st_crs(range_list$p1), 
+	coord_sf(crs = sf::st_crs(range_list[[1]]), 
      					xlim = c(minx, maxx), 
      					ylim = c(miny, maxy), 
      					expand = FALSE, 

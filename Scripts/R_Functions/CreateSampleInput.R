@@ -1,4 +1,4 @@
-Create_Sample_Ras<-function(len,inc,sample_input=TRUE,crs_input=NULL,range_list=NULL){
+Create_Sample_Ras<-function(len,inc,sample_input=TRUE,range_list=NULL){
 	require(terra)
 
 if(sample_input

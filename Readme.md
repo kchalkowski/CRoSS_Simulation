@@ -8,9 +8,9 @@ This pipeline in it's current form can run two kinds of movement simulations
 
 # How to use this pipeline
 1. Clone this repository
-2. *Download input geodatabases needed to run the WAH simulation
-	WAH_Ranges: https://irma.nps.gov/DataStore/Reference/Profile/2318272
-	Ambler_Road: https://eplanning.blm.gov/Map-Data/?id=9ba0fa87-a7f2-f011-8407-001dd803d067&spid=4c183c4d-a8f2-f011-8407-001dd80c29f3
+2. Download input geodatabases needed to run the WAH simulation.   
+    * WAH_Ranges: https://irma.nps.gov/DataStore/Reference/Profile/2318272   
+    * Ambler_Road: https://eplanning.blm.gov/Map-Data/?id=9ba0fa87-a7f2-f011-8407-001dd803d067&spid=4c183c4d-a8f2-f011-8407-001dd80c29f3   
 3. Create a folder called Input in the root directory of the pipeline
 4. Unzip geodatabases into the Input folder
 5. Run RunTargets.R to run the pipeline

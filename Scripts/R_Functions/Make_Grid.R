@@ -40,9 +40,8 @@
 #if grid.opt="homogeneous"
 #object is c(len,inc)
 
-Make_Grid<-function(object,grid.opt="homogeneous",sample=0,sample.design=NULL){
+Make_Grid<-function(object,grid.opt="homogeneous"){
   require(terra)
-  #require(NLMR)
   
   if(grid.opt=="homogenous"){
     grid.opt="homogeneous"
@@ -56,21 +55,16 @@ Make_Grid<-function(object,grid.opt="homogeneous",sample=0,sample.design=NULL){
   if(class(object)=="SpatRaster"){
     ras=object
     len=dim(ras)[1]
-    inc=res(ras)[1]/1000
-    grid.opt="heterogeneous"
+    inc=res(ras)[1]
     
     if(dim(ras)[1]!=dim(ras)[2]){stop("raster needs to be square")}
-    if(dim(ras)[1]!=len){
-      stop("dimensions of raster do not match input len")
-    }
-    
   }
   
   #get number of cells in grid
   cells=len^2
   
-  #if grid homogeneous-- will later enter ability to alter LULC
-  if("homogeneous"%in%grid.opt & sample != 1){
+  #if grid homogeneous-- can later enter ability to alter LULC
+  if("homogeneous"%in%grid.opt){
     #initialize empty grid matrix
     grid=matrix(nrow=round(cells),ncol=7)
   } else {
@@ -102,7 +96,7 @@ Make_Grid<-function(object,grid.opt="homogeneous",sample=0,sample.design=NULL){
   #get centroids-only object
   centroids=grid[,c(6,7)]
   
-  if(!("homogeneous"%in%grid.opt & sample != 1)){
+  if(!("homogeneous"%in%grid.opt)){
     
     #simulates a spatially random neutral landscape model with values drawn from a uniform distribution
     #values rescaled to range from 0-1

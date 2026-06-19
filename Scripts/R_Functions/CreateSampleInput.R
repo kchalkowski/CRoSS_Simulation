@@ -1,6 +1,9 @@
-Create_Sample_Ras<-function(len,inc){
+Create_Sample_Ras<-function(len,inc,sample_input=TRUE,crs_input=NULL,range_list=NULL){
 	require(terra)
 
+if(sample_input
+	){
+print("test")
 # 1. Define the spatial extent (xmin, xmax, ymin, ymax)
 ext_global <- terra::ext(0, 100, 0, 100)
 
@@ -8,9 +11,27 @@ ext_global <- terra::ext(0, 100, 0, 100)
 # By default, terra calculates the correct dimensions (rows and columns)
 r <- terra::rast(ext = ext_global, resolution = inc)
 
+} else{
+	ranges_sf=do.call(rbind,range_list)
+	rbbox=sf::st_bbox(ranges_sf)
+	len_w=abs(rbbox$xmax-rbbox$xmin)
+	len_h=abs(rbbox$ymax-rbbox$ymin)
+	lendiff=abs(len_w-len_h)
+	if(len_w<len_h){
+	rbbox[3]=rbbox$xmax+lendiff
+	}
+	if(len_h<len_w){
+	rbbox[4]=rbbox$ymax+lendiff
+		}
+ext_global <- terra::ext(rbbox)
+r <- terra::rast(ext = ext_global, resolution = inc, crs=crs(ranges_sf))
+}
+	
 values(r)=0
 # 3. Inspect the object properties
 #print(r)
+
+
 return(r)
 
 }
@@ -132,5 +153,23 @@ Behav_St_Changes_Sample<-function(d,pop,mv_jday,grid){
   
 }
 
+#Create sample road
+Create_Sample_Road<-function(){
+#split range polygon 1 and 2
+#p1=40,80; p2=70,10
+coord_matrix <- matrix(c(
+  40,80,70,10
+), ncol = 2, byrow = TRUE)
+
+# 2. Convert to a standalone geometry (sfg)
+single_line <- st_linestring(coord_matrix)
+
+# 3. Convert to a geometry column (sfc) and assign a CRS (e.g., WGS84 / EPSG 4326)
+line_sfc <- st_sfc(single_line, crs = 4326)
+
+road_list=list(road=line_sfc,coords=coord_matrix)
+
+return(road_list)
+}
 
 

@@ -36,6 +36,8 @@ tar_option_set(packages = c("tidyr",
                             "ggplot2",
 														"gganimate",
                             "mapview",
+													  "rnaturalearth",
+													  "rnaturalearthdata",
                             "RcppParallel"))
 
 # Pipeline ---------------------------------------------------------
@@ -54,46 +56,141 @@ list(
              file.path("Scripts","cpp_Functions","Caribou_Movement_v2.cpp"),
              format="file"),
   
-	## Sample input setup ------------
-		#len is num cells on each side
-		#inc is resolution
-	tar_target(grid,Make_Grid(object=c(100,1),
-														grid.opt="homogeneous")),
+	## Pull range layers ------------
+	tar_target(wah_range_layers,Pull_Range_Layers(Input_folder,
+		gdb_filename="kernel_ann_report.gdb",
+		ambler=FALSE)),
 	
-	#### Create sample raster with same dimensions as sample grid
-	tar_terra_rast(r,Create_Sample_Ras(100,1)),
+	#Pull ambler road
+	tar_target(ambler_layers,Pull_Range_Layers(Input_folder,
+		gdb_filename="AmblerRoad_SupplementalEIS_Project_Options.gdb",
+		ambler=TRUE)),
+	
+	## Sample input setup ------------
 	
 	#### Get list of sample seasonal range polygons from sample grid
+	#Input:
+	#Output: 
+		#range_list- list of simple feature polygons
 	tar_target(range_list,Create_Range_Polygons()),
+	tar_target(wah_ranges,Sample_WAH_Layers(wah_range_layers)),
+
+	#### Create sample raster with same dimensions as sample grid
+	#Input:
+		#len, inc
+	#Output:
+		#r- SpatRaster with len x len dimensions and inc resolution
+	tar_terra_rast(r,Create_Sample_Ras(100,1,sample_input=TRUE,NULL,NULL)),
+	tar_terra_rast(wah_r,Create_Sample_Ras(1,inc=1000,
+																		 sample_input=FALSE,
+																		 crs_input=6393,
+																		 wah_ranges)),
+	
+	#Input: 
+		#object = c(len, inc)
+			#len is num cells on each side
+			#inc is resolution of each cell
+		#grid.opt- option for grid setup, character string
+	#Output: data frame listing each cell in grid and coordinates of cell centerpoint
+	tar_target(grid,Make_Grid(object=c(100,1),
+														grid.opt="homogeneous")),
+	tar_target(wah_grid,Make_Grid(object=wah_r,
+														grid.opt="homogeneous")),
+	
+	#Create sample road dividing ranges 1 and 2
+	tar_target(road_list,Create_Sample_Road()),
+	#pull road coordinates for ambler
 	
 	#### Create distance raster collection from sample calving/summer/winter polygons
+	#Input: 
+		#range_list
+		#r
+		#sample_input- boolean, indicate if generating sample input
+	#Output:
+		#range_dist_sprc- spatraster collection of distance from centroid of each polygon in range list
 	tar_terra_sprc(range_dist_sprc,Distance_Ranges(range_list,r,sample_input=TRUE)),
-	
+	tar_terra_sprc(wah_range_dist_sprc,Distance_Ranges(wah_ranges,wah_r,sample_input=TRUE)),
+
 	#### Append sample grid with distance values for each of the three sample ranges
-  tar_target(grid_list,Append_Grid_Distance(grid,range_dist_sprc,range_list,sample_input=TRUE)),
-	
+  #Input: 
+		#grid
+		#range_dist_sprc
+		#range_list
+		#sample_input: boolean
+	#Output: 
+		#grid_list- list of objects used for movement algorithm
+			#$cells - number of cells in grid
+			#$grid
+			#$centroids- list of centroids of each cell
+	tar_target(grid_list,Append_Grid_Distance(grid,range_dist_sprc,range_list,sample_input=TRUE)),
+	tar_target(wah_grid_list,Append_Grid_Distance(wah_grid,wah_range_dist_sprc,wah_ranges,sample_input=FALSE)),
+
   #### Create dataframe for changing movement by jday ---------
-	#made edits to make all migratory movement for testing/simplification
+	#Input
+		#sample_input- boolean
+	#Output
+		#mv_jday- data frame, each row is a movement state, each column is a characteristic of each movement state
+			#state- name of polygon attracted to
+			#sl_shp- shape parameter of step length distribution for movement
+			#sl_rat- rate parameter of step length distribution for movement
+			#migr- 
+			#attract-
+			#start- jday start for movement state
+			#end- jday end for movement state
   tar_target(mv_jday,Move_Jday(sample_input=TRUE)),
-	
+	tar_target(wah_mv_jday,Move_Jday(sample_input=FALSE)),
+
 	## Run simulation -------
+	#grid_list- 
+	#mv_jday
+	#N0- integer, number of caribou to initialize in simulation
+	#dist_start- maximum distance from starting polygon centroid to initialize caribou
+	#r- raster version of grid on which simulation is run
+	#cpp_functions- list of cpp functions to source before simulation is run
 	tar_target(output_list,
   Run_Simulation(grid_list,
+  							 road_list,
                  mv_jday,
                  N0=100, #Number of caribou in simulation
+  						   inc=1,
                  dist_start=100, #Maximum distance from calving area centerpoint to initialize caribou
                  r, 
+                 cpp_functions=list(Caribou_Movement_Script),
+                 out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
+                 )),
+	
+	tar_target(wah_output_list,
+  Run_Simulation(wah_grid_list,
+  							 ambler_layers,
+                 wah_mv_jday,
+                 N0=100, #Number of caribou in simulation
+  							 inc=1000,
+                 dist_start=100000, #Maximum distance from calving area centerpoint to initialize caribou
+                 wah_r, 
                  cpp_functions=list(Caribou_Movement_Script),
                  out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
                  )),
   
   ## Process outputs ----- 
   tar_target(processed_outputs,
-             Process_Outputs(output_list,grid_list,r,mv_jday)),
+             Process_Outputs(output_list,grid_list,r,mv_jday,inc=1)),
+	
+	tar_target(wah_processed_outputs,
+             Process_Outputs(wah_output_list,wah_grid_list,wah_r,wah_mv_jday,inc=10000)),
 
 	## Create animation of movement from tracking output-----
-	tar_target(string_out,Tracking_Viz(processed_outputs$tracking))
+	tar_target(string_out,Tracking_Viz(processed_outputs$tracking,
+																		 filename="sample_gif.gif",
+																		 sample_input=TRUE)),
 	
+	tar_target(wah_string_out,
+		Tracking_Viz(wah_processed_outputs$tracking,
+								 filename="wah_gif.gif",
+								 sample_input=FALSE,
+								 wah_r,
+								 ambler_layers$ranges[[1]],
+								 wah_ranges))
+
 	)
 
 #out.opts: options for outputs from simulation

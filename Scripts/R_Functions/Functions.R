@@ -31,7 +31,7 @@ Distance_Ranges<-function(range_list,akc3,sample_input){
 
 Append_Each_Dist<-function(distr,grid,name,sample_input){
 	if(!sample_input){
-  distvals=round(values(distr)/1000,0)
+  distvals=round(values(distr),0)
 	} else{
 	distvals=round(values(distr),0)
 		}
@@ -98,7 +98,21 @@ Move_Jday<-function(sample_input=TRUE){
   mv_jday[,5]=c(1,1,1)
   mv_jday[,6]=c(1,100,200)
   mv_jday[,7]=c(99,199,365)
-  }
+  } else{
+
+  mv_jday=data.frame(matrix(nrow=3,ncol=7))
+  colnames(mv_jday)=c("state","sl_shp","sl_rat","migr","attract","start","end")
+  mv_jday[,1]=c("p1",
+                "p2",
+                "p3")
+  mv_jday[,2]=c(10000,10000,10000)
+  mv_jday[,3]=c(0.8,0.8,0.8)
+  mv_jday[,4]=c(1,1,1)
+  mv_jday[,5]=c(1,1,1)
+  mv_jday[,6]=c(1,100,200)
+  mv_jday[,7]=c(99,199,365)
+
+  	}
   
   return(mv_jday)
 }
@@ -164,29 +178,34 @@ Behav_St_Changes<-function(d,pop,mv_jday,grid){
 
 # Run simulation ---------
 Run_Simulation<-function(grid_list,
+												 road_list,
                          mv_jday,
                          N0,
+												 inc,
                          dist_start,
                          akc3,
                          cpp_functions,
                          out.opts=NULL){
   out.list=vector(mode="list",length=0)
   
+  # Pull coords for output summaries
+  coords=terra::crds(akc3)
+  
   # Initialize cpp functions -----
   Rcpp::sourceCpp(cpp_functions[[1]])
   
   print("sourced cpp script")
   
-  
   # Initialize caribou on landscape ---------
   pop<-Initialize_Population(grid_list,N0,dist_start,mv_jday,sample_input=TRUE)
+  centroids=grid_list$centroids
   
   # Output initial condition objects ---------
   if(!missing(out.opts)){
     if("init_locs"%in%out.opts){
       templist=vector(mode="list",length=1)
       centroids=grid_list$centroids
-      cdf=CentroidsRowtoXY(pop[,3],centroids,akc3)
+      cdf=CentroidsRowtoXY(pop[,3],coords)
       
       templist[[1]]=cdf
       out.list=append(out.list,templist)
@@ -216,7 +235,7 @@ Run_Simulation<-function(grid_list,
   
   print("starting movement")
 
-  		for(d in 1:365){    
+  		for(d in 1:151){    
    
       if("all_pop"%in%out.opts){
       all_pop[[d]]<-pop
@@ -233,8 +252,9 @@ Run_Simulation<-function(grid_list,
       #convert sel_row to centroids column
       cent_col=sel_row+1 #starts on col 3 of centroids, but starting at 0 index for cpp function
       
+      
       #do movement
-      pop=Movement(pop,centroids,shape,rate,cent_col)
+      pop=Movement(pop,centroids,shape,rate,cent_col,road_list$coords,inc)
       
       #update outputs
       if(tracking){
@@ -273,7 +293,7 @@ add_cols_track<-function(track, mv_jday){
   return(track)
 }
 
-Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
+Process_Outputs<-function(output_list,grid_list,akc3,mv_jday,inc){
   centroids=grid_list$centroids
   processed_outputs=vector(mode="list",length=0)
   outputs=names(output_list)
@@ -288,9 +308,10 @@ Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
   
   if("tracking"%in%outputs){
     tracking=output_list$tracking
+    coords=terra::crds(akc3)
     track_list=
       apply(tracking,1, function(x)
-      CentroidsRowtoXY(x,centroids,akc3),
+      CentroidsRowtoXY(x,coords),
       simplify=FALSE
       )
     
@@ -314,4 +335,9 @@ Process_Outputs<-function(output_list,grid_list,akc3,mv_jday){
   }
 
 
+#Helper function - convert cell number/centroid row number to x/y coords
+CentroidsRowtoXY<-function(locs,coords){
+  xy=as.data.frame(coords[locs,])
+  return(xy)
+}
 

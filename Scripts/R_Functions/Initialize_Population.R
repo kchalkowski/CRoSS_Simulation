@@ -17,8 +17,9 @@
 Initialize_Population<-function(grid_list,N0,dist_start,mv_jday,sample_input){
   grid=grid_list$grid
   centroids=grid_list$centroids
+  
   if(!sample_input){
-  ind=which(centroids[,which(colnames(centroids)=="calving_area.kmz") ]<dist_start)
+  ind=which(centroids[,which(colnames(centroids)=="p1") ]<dist_start)
   } else{
   ind=which(centroids[,which(colnames(centroids)=="p1") ]<dist_start)
   	}

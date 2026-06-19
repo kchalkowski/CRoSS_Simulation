@@ -73,7 +73,11 @@ list(
 	#Output: 
 		#range_list- list of simple feature polygons
 	tar_target(range_list,Create_Range_Polygons()),
-	tar_target(wah_ranges,Sample_WAH_Layers(wah_range_layers)),
+	tar_target(wah_ranges,
+		Sample_WAH_Layers(
+			wah_range_layers,
+			sel_range_names=c("winter_22_23","calving23")
+		)),
 
 	### Create sample raster ------
 	#Input:
@@ -113,7 +117,11 @@ list(
 	#Output:
 		#range_dist_sprc- spatraster collection of distance from centroid of each polygon in range list
 	tar_terra_sprc(range_dist_sprc,Distance_Ranges(range_list,r,sample_input=TRUE)),
-	tar_terra_sprc(wah_range_dist_sprc,Distance_Ranges(wah_ranges,wah_r,sample_input=TRUE)),
+	tar_terra_sprc(wah_range_dist_sprc,Distance_Ranges(
+		wah_ranges,
+		wah_r,
+		sample_input=FALSE,
+		contour=50)),
 
 	### Append sample grid with distance values -------
   #Input: 
@@ -142,7 +150,14 @@ list(
 			#start- jday start for movement state
 			#end- jday end for movement state
   tar_target(mv_jday,Move_Jday(sample_input=TRUE)),
-	tar_target(wah_mv_jday,Move_Jday(sample_input=FALSE)),
+	tar_target(wah_mv_jday,
+		Move_Jday(
+		sample_input=FALSE,
+		sel_range_names=c("winter_22_23","calving23"),
+		sl_shp=c(10000,10000),
+		sl_rat=c(0.8,0.8),
+		start=c(1,100),
+		end=c(99,199))),
 
 	## Run simulation -------
 	#grid_list- 
@@ -163,24 +178,25 @@ list(
                  out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
                  )),
 	
-	tar_target(wah_output_list,
+	tar_force(wah_output_list,
   Run_Simulation(wah_grid_list,
   							 ambler_layers,
                  wah_mv_jday,
                  N0=100, #Number of caribou in simulation
   							 inc=1000,
-                 dist_start=100000, #Maximum distance from calving area centerpoint to initialize caribou
+                 dist_start=100000, #Maximum distance from first range centerpoint to initialize caribou
                  wah_r, 
                  cpp_functions=list(Caribou_Movement_Script),
                  out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
-                 )),
+                 ),
+		force=1>0),
   
   ## Process outputs ----- 
   tar_target(processed_outputs,
              Process_Outputs(output_list,grid_list,r,mv_jday,inc=1)),
 	
 	tar_target(wah_processed_outputs,
-             Process_Outputs(wah_output_list,wah_grid_list,wah_r,wah_mv_jday,inc=10000)),
+             Process_Outputs(wah_output_list,wah_grid_list,wah_r,wah_mv_jday,inc=1000)),
 
 	## Create visual outputs -------
 	
@@ -196,8 +212,18 @@ list(
 								 filename="wah_gif.gif",
 								 sample_input=FALSE,
 								 wah_r,
-								 ambler_layers$ranges[[1]],
-								 wah_ranges))
+								 ambler_layers,
+								 wah_ranges)),
+	
+	#Create visual of seasonal ranges
+	tar_target(string_ranges,
+		PlotRangeLayers(
+			wah_range_layers,
+			wah_r,
+			"Range_Maps",
+			ambler_layers$ranges[[1]]
+			)
+		)
 
 	)
 
@@ -205,3 +231,7 @@ list(
   #init_locs: output sf data frame with initial locations of caribou
   #tracking: output moved locations of caribou
   #all_pop: output list of pop matrices for each day of simulation
+
+
+
+

@@ -7,15 +7,22 @@ Create_Dist_Rast<-function(ctr,ras){
   terra::distance(ctr_ras)
 }
 
-Distance_Ranges<-function(range_list,akc3,sample_input){
+Range_Ops<-function(range,contour){
+	range=range[range$Contour==contour,]
+	range=sf::st_cast(range,"POLYGON")
+	st_centroid(range)
+	}
+
+Distance_Ranges<-function(range_list,akc3,sample_input,contour=NULL){
+	if(sample_input){
 	#get centerpoint for each polygon
   range_centers=lapply(range_list,st_centroid)
-  
-  #convert range_centers to CRS_albers
-  if(!sample_input){
-  range_centers=lapply(range_centers,Transform_CRS_Albers)
+	} else{
+		
+	range_centers=lapply(range_list,Range_Ops,contour=contour)
+		
   }
-  
+
   base_rast=akc3
   
   #create range dists vectors
@@ -25,7 +32,6 @@ Distance_Ranges<-function(range_list,akc3,sample_input){
   
   
   return(range_dists)
-  #loses names in targets pipeline.. not sure why.. fix another time
 }
 
 
@@ -54,7 +60,13 @@ Append_Grid_Distance<-function(grid,range_dist_sprc,range_list,sample_input){
 
 # Move jday df ---------
 #will allow inputs later
-Move_Jday<-function(sample_input=TRUE){
+Move_Jday<-function(sample_input=TRUE,
+									  sel_range_names=NULL,
+									  sl_shp=NULL,
+										sl_rat=NULL,
+										start=NULL,
+								    end=NULL
+										){
 	
 	#Earlier version
   #jday 1-60, resource driven, select inside calving area
@@ -71,21 +83,6 @@ Move_Jday<-function(sample_input=TRUE){
 			#1, 2, 3
 		#start/end - jday to switch season to next. '0' switches mean they switch when they reach certain location rather than by jday
 	
-  mv_jday=data.frame(matrix(nrow=5,ncol=7))
-  colnames(mv_jday)=c("state","sl_shp","sl_rat","migr","attract","start","end")
-  mv_jday[,1]=c("calving",
-                "summer",
-                "falmigr",
-                "winter",
-                "sprmigr")
-  mv_jday[,2]=c(5,5,10.0,5,10.0)
-  mv_jday[,3]=c(0.3550,0.3550,0.3,0.3550,0.3)
-  mv_jday[,4]=c(0,0,1,0,1)
-  mv_jday[,5]=c(1,2,3,3,1)
-  mv_jday[,6]=c(1,61,151,0,301)
-  mv_jday[,7]=c(60,150,0,300,0)
-  
-  #edits 13 JUN 26
   if(sample_input){
   mv_jday=data.frame(matrix(nrow=3,ncol=7))
   colnames(mv_jday)=c("state","sl_shp","sl_rat","migr","attract","start","end")
@@ -100,17 +97,21 @@ Move_Jday<-function(sample_input=TRUE){
   mv_jday[,7]=c(99,199,365)
   } else{
 
-  mv_jday=data.frame(matrix(nrow=3,ncol=7))
+  mv_jday=data.frame(matrix(nrow=length(sel_range_names),ncol=7))
   colnames(mv_jday)=c("state","sl_shp","sl_rat","migr","attract","start","end")
-  mv_jday[,1]=c("p1",
-                "p2",
-                "p3")
-  mv_jday[,2]=c(10000,10000,10000)
-  mv_jday[,3]=c(0.8,0.8,0.8)
-  mv_jday[,4]=c(1,1,1)
-  mv_jday[,5]=c(1,1,1)
-  mv_jday[,6]=c(1,100,200)
-  mv_jday[,7]=c(99,199,365)
+  mv_jday[,1]=sel_range_names
+  mv_jday[,2]=sl_shp
+  mv_jday[,3]=sl_rat
+  mv_jday[,4]=rep(1,length(sel_range_names))
+  mv_jday[,5]=rep(1,length(sel_range_names))
+  mv_jday[,6]=start
+  mv_jday[,7]=end
+   #mv_jday[,2]=c(10000,10000,10000)
+  #mv_jday[,3]=c(0.8,0.8,0.8)
+  #mv_jday[,4]=c(1,1,1)
+  #mv_jday[,5]=c(1,1,1)
+  #mv_jday[,6]=c(1,100,200)
+  #mv_jday[,7]=c(99,199,365)
 
   	}
   
@@ -232,6 +233,20 @@ Run_Simulation<-function(grid_list,
   } else{
     tracking<-FALSE
   }
+
+      #road_list$coords needs to be converted from projected x/y coordinates
+      #to coords respective to the grid
+      rcoords=road_list$coords
+      #rcoords[2,1]=rcoords[2,1]-70000
+      #rcoords[2,2]=rcoords[2,2]+70000
+      rsf=st_as_sf(as.data.frame(rcoords),coords=c(1,2),crs=st_crs(akc3))
+      #mapview(wah_r)+mapview(rsf)
+      
+      #1-get cell number of raster where the coordinates lie
+      cells=cellFromXY(akc3,st_coordinates(rsf))
+      #2-get the x/y of centroids from this
+      rcoords_grid=centroids[cells,1:2]
+      
   
   print("starting movement")
 
@@ -252,9 +267,8 @@ Run_Simulation<-function(grid_list,
       #convert sel_row to centroids column
       cent_col=sel_row+1 #starts on col 3 of centroids, but starting at 0 index for cpp function
       
-      
       #do movement
-      pop=Movement(pop,centroids,shape,rate,cent_col,road_list$coords,inc)
+      pop=Movement(pop,centroids,shape,rate,cent_col,rcoords_grid,inc)
       
       #update outputs
       if(tracking){

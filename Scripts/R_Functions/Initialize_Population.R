@@ -17,13 +17,10 @@
 Initialize_Population<-function(grid_list,N0,dist_start,mv_jday,sample_input){
   grid=grid_list$grid
   centroids=grid_list$centroids
+  start_range=colnames(grid_list$grid)[8]
   
-  if(!sample_input){
-  ind=which(centroids[,which(colnames(centroids)=="p1") ]<dist_start)
-  } else{
-  ind=which(centroids[,which(colnames(centroids)=="p1") ]<dist_start)
-  	}
-  
+  ind=which(centroids[,which(colnames(centroids)==start_range) ]<dist_start)
+
   ## Initialize population ----------------------
   
     #use this to weight preference so that still end up with N0 size population

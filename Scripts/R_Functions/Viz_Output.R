@@ -53,7 +53,7 @@ Tracking_Viz<-function(tracking,
 	alaska +
   geom_sf(tracksf, 
   				mapping=aes(colour = state),alpha = 0.7, show.legend = FALSE)+
-	scale_colour_manual(values=c("turquoise","magenta"))+
+	scale_colour_manual(values=c("blue","red"))+
   geom_sf(data=line_sf,show.legend = FALSE)+
 	coord_sf(crs = sf::st_crs(range_list[[1]]), 
      					xlim = c(minx, maxx), 
@@ -63,7 +63,7 @@ Tracking_Viz<-function(tracking,
 	transition_time(day) +
   ease_aes('linear')+theme_minimal()
 	
-	animate(myPlot, fps = 5, width = 200, height = 200, renderer = gifski_renderer())
+	animate(myPlot, fps = 5, width = 1000, height = 1000, renderer = gifski_renderer())
 	anim_save(paste0("Output/",filename))
 	}
 		}
@@ -135,8 +135,8 @@ PlotRangeLayers<-function(range_layers,wah_r,folder,road){
 		ggsave(
 			filename=paste0("Output/",folder,"/seasonal_range_yr",ny[i],".png"),
 			plot=myplot,
-			width=8,
-			height=8,
+			width=5,
+			height=5,
 			units="in",
 			bg="white"
 			)

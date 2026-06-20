@@ -22,12 +22,6 @@ Movement=function(pop,centroids,shape,rate,cent_col,road_coords,inc){
   #apoplocs is current location, needed for when distance=0, stays in same cell
   m1=parallelMovementRcpp_portion(pop,pop[,1,drop=FALSE],pop[,3,drop=FALSE],centroids,road_coords,1,cent_col,inc)
 
-  #test
-  #Rcpp::sourceCpp(cpp_functions[[1]])
-  #pop2=pop[1,,drop=FALSE]
-  #m1=parallelMovementRcpp_portion(pop2,pop2[,1,drop=FALSE],pop2[,3,drop=FALSE],centroids,road_coords,1,cent_col,inc)
-
-  
   #update locations
   pop[,3]=m1
   

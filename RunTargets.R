@@ -14,7 +14,4 @@ tar_manifest()
 #Make pipeline
 tar_make()
 
-#Current problem
-	#impassable barrier is extending beyond start and end point of road
-	#being treated as line rather than line segment
 

@@ -10,7 +10,7 @@ Create_Dist_Rast<-function(ctr,ras){
 Range_Ops<-function(range,contour){
 	range=range[range$Contour==contour,]
 	range=sf::st_cast(range,"POLYGON")
-	st_centroid(range)
+	#st_centroid(range)
 	}
 
 Distance_Ranges<-function(range_list,akc3,sample_input,contour=NULL){
@@ -19,7 +19,7 @@ Distance_Ranges<-function(range_list,akc3,sample_input,contour=NULL){
   range_centers=lapply(range_list,st_centroid)
 	} else{
 		
-	range_centers=lapply(range_list,Range_Ops,contour=contour)
+	range_centers=lapply(range_list,st_centroid)
 		
   }
 

@@ -1,4 +1,10 @@
 
+Range_Ops<-function(range,contour){
+	range=range[range$Contour==contour,]
+	range=sf::st_cast(range,"POLYGON")
+	return(range)
+	}
+
 Pull_Range_Layers=function(Input_folder,gdb_filename,ambler=FALSE){
 path <- paste0(Input_folder,"/",gdb_filename)
 layer_list = st_layers(path)
@@ -9,6 +15,9 @@ for(i in 1:length(layers)){
 range=vect(path,layer=layers[i])
 ranges[[i]]=sf::st_as_sf(range)
 }
+
+ranges=lapply(ranges,Range_Ops,contour=50)
+
 
 range_out=list("ranges"=ranges,"range_names"=layers)
 

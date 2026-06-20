@@ -19,7 +19,7 @@ Initialize_Population<-function(grid_list,N0,dist_start,mv_jday,sample_input){
   centroids=grid_list$centroids
   start_range=colnames(grid_list$grid)[8]
   
-  ind=which(centroids[,which(colnames(centroids)==start_range) ]<dist_start)
+  ind=which(centroids[,which(colnames(centroids)==start_range)]<dist_start)
 
   ## Initialize population ----------------------
   

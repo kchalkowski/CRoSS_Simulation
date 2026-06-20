@@ -189,7 +189,7 @@ list(
                  cpp_functions=list(Caribou_Movement_Script),
                  out.opts=c("init_locs","tracking","all_pop") #outputs (see end of this script for list of options)
                  ),
-		force=1>0),
+		force=1<0),
   
   ## Process outputs ----- 
   tar_target(processed_outputs,
@@ -224,6 +224,8 @@ list(
 			ambler_layers$ranges[[1]]
 			)
 		)
+	
+	
 
 	)
 

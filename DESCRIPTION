@@ -7,5 +7,7 @@ Authors@R: person("Your", "Name", role = c("aut", "cre"), email =
         "your@email.com")
 Description: More about what it does (maybe more than one line).
 License: GPL (>= 2)
-Imports: Rcpp (>= 1.0.14)
-LinkingTo: Rcpp
+Imports: Rcpp (>= 1.0.14), RcppParallel (>= 5.1.10)
+LinkingTo: Rcpp, RcppParallel, RcppArmadillo
+SystemRequirements: GNU make
+RoxygenNote: 7.3.2

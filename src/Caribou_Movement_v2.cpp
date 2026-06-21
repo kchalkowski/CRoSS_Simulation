@@ -423,7 +423,7 @@ NumericMatrix parallelMovementRcpp_portion(const NumericMatrix& apop,
 ///////Run the thing//////
 /////////////////////////
 
-//[[Rcpp::export]]
+
 //define the main function, MovementRcpp
 NumericMatrix MovementRcppParallel(NumericMatrix& apop,
                                    IntegerMatrix& apopmat,

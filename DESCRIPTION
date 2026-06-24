@@ -11,3 +11,4 @@ Imports: Rcpp (>= 1.0.14), RcppParallel (>= 5.1.10)
 LinkingTo: Rcpp, RcppParallel, RcppArmadillo
 SystemRequirements: GNU make
 RoxygenNote: 7.3.2
+Encoding: UTF-8

@@ -5,7 +5,3 @@ parallelMovementRcpp_portion <- function(apop, apopmat, apoplocs, acent, road, p
     .Call(`_crossR_parallelMovementRcpp_portion`, apop, apopmat, apoplocs, acent, road, pref, cent_col, inc)
 }
 
-rcpp_hello_world <- function() {
-    .Call(`_crossR_rcpp_hello_world`)
-}
-

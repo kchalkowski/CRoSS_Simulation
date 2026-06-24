@@ -1,10 +1,4 @@
-#' Initialize population matrix
-#' @param grid_list, list
-#' @param N0, integer
-#' @param dist_start, integer
-#' @param mv_jday, data frame
-#' @param sample_input, boolean 
-#' @noRd
+
 Initialize_Population<-function(grid_list,N0,dist_start,mv_jday,sample_input){
 	
 #Initializes the population matrix

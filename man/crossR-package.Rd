@@ -3,32 +3,28 @@
 \alias{crossR}
 \docType{package}
 \title{
-  A short title line describing what the package does
+  crossR: Simulate agent-based models for animal-road systems
 }
 \description{
-  A more detailed description of what the package does. A length
-  of about one to five lines is recommended.
+  Builds simulation of animal movement between seasonal ranges with road interactions. Includes sample data using publicly-available Western Arctic Herd seasonal ranges. 
 }
 \details{
-  This section should provide a more detailed overview of how to use the
-  package, including the most important functions.
+To see a detailed vignette:
+```
+vignette("crossR")
+```
 }
 \author{
-Your Name, email optional.
-
-Maintainer: Your Name <your@email.com>
+Maintainer: Kayleigh Chalkowski <Kayleigh.Chalkowski@tamuk.edu>
 }
 \references{
-  This optional section can contain literature or other references for
-  background information.
+Joly K. 2026. Western Arctic Herd caribou annual and seasonal range distributions. National Park Service
+https://irma.nps.gov/DataStore/Reference/Profile/2318272
 }
-\keyword{ package }
+\keyword{ crossR }
 \seealso{
-  Optional links to other man pages
 }
 \examples{
   \dontrun{
-     ## Optional simple examples of the most important functions
-     ## These can be in \dontrun{} and \donttest{} blocks.   
   }
 }

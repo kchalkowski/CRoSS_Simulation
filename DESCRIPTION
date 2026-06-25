@@ -1,14 +1,16 @@
 Package: crossR
 Type: Package
-Title: Concise Summary of What the Package Does
+Title: crossR
 Version: 1.0
 Date: 2026-06-20
-Authors@R: person("Your", "Name", role = c("aut", "cre"), email =
-        "your@email.com")
-Description: More about what it does (maybe more than one line).
+Authors@R: person("Kayleigh", "Chalkowski", role = c("aut", "cre"), email =
+        "Kayleigh.Chalkowski@tamuk.edu")
+Description: Builds simulation of animal movement between seasonal ranges with road interactions. Includes sample data using publicly-available Western Arctic Herd seasonal ranges. 
 License: GPL (>= 2)
 Imports: Rcpp (>= 1.0.14), RcppParallel (>= 5.1.10)
 LinkingTo: Rcpp, RcppParallel, RcppArmadillo
 SystemRequirements: GNU make
 RoxygenNote: 7.3.2
 Encoding: UTF-8
+Depends: 
+    R (>= 3.5)

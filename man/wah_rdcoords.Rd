@@ -1,5 +1,5 @@
-\name{Road coordinates}
-\alias{Sample input: rdcoords}
+\name{wah_rdcoords}
+\alias{wah_rdcoords}
 \docType{data}
 \title{
 Sample road coordinates based loosely on planned Ambler Road spatial data
@@ -25,8 +25,6 @@ Sample input data that can be used for Format_Spatial_Data function
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-rdcoords=data(wah_rdcoords)
-range_list=data(range_list)
-Format_Spatial_Ranges(range_list,rdcoords)
+rdcoords=data("wah_rdcoords")
 }
 \keyword{datasets}

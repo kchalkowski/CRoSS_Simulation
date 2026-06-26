@@ -316,7 +316,7 @@ return(proc_sim_output)
 
 # Vizualize_Tracks - export --------
 Vizualize_Tracks<-function(tracking,
-													 path="./track_viz.gif",
+													 path="track_viz.gif",
 													 spatial_input,
 													 country="United States of America",
 													 plot_buffer=c(-250000,-100000,100000,120000)){
@@ -363,11 +363,11 @@ Vizualize_Tracks<-function(tracking,
      					ylim = c(miny, maxy), 
      					expand = FALSE, 
      					datum = NA)+
-	transition_time(day) +
+	gganimate::transition_time(day) +
   ease_aes('linear')+theme_minimal()
 	
-	animate(myPlot, fps = 5, width = 1000, height = 1000, renderer = gifski_renderer())
-	anim_save(path)
+	#gganimate::animate(myPlot, fps = 5, width = 1000, height = 1000, renderer = gifski_renderer())
+	gganimate::anim_save(path,myPlot)
 	
 	return(tracksf)
 	

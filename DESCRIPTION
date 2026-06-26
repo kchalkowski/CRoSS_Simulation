@@ -14,3 +14,7 @@ RoxygenNote: 7.3.2
 Encoding: UTF-8
 Depends: 
     R (>= 3.5)
+Suggests: 
+    knitr,
+    rmarkdown
+VignetteBuilder: knitr

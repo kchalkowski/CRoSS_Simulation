@@ -6,7 +6,7 @@ date: "`r Sys.Date()`"
 output: 
   rmarkdown::html_vignette:
     toc: true
-    toc_depth: 2
+    toc_depth: 4
 vignette: >
   %\VignetteIndexEntry{crossR-vignette}
   %\VignetteEngine{knitr::rmarkdown}
@@ -22,7 +22,16 @@ knitr::opts_chunk$set(
 )
 ```
 
-### Load libraries  
+## Abstract   
+`crossR` is a collection of functions to simulate spatially-explicit animal movement interactions with linear barriers such as roads. It allows you to vary animal movement characteristics in two ways: 1) "where to move?" according to seasonal ranges, where movement is directed towards the centroids of range polygons; and 2) "how to move?", by sampling distances in meters from a gamma-distribution representing step lengths at a given timestep.    
+
+Linear barriers (input, for now, simply as a start and end coordinate) are impermeable to movement.   
+
+This package contains functions that format spatial data into matrix objects for the movement simulation, format a data frame that sets movement rules, run the simulation, and visualize an animation of the simulated tracks.
+
+## 1. Set up environment
+
+### 1.1 Load libraries  
 ```{r setup, results="hide",message=FALSE,warning=FALSE}
 library(crossR)
 library(sf)
@@ -30,62 +39,104 @@ library(ggplot2)
 library(gganimate)
 ```
 
-### Load sample input data   
+## 2. Inputs
 
-#### Load seasonal ranges
+To run a simulation, you need the following inputs:    
+
+1. Spatial ranges
+2. Barrier coordinates
+3. Movement rules
+
+### 2.1 Spatial ranges
+
+Spatial ranges must be sf data frames, and represent where individuals exist on the landscape. Specifically, individuals are attracted to the centerpoint of each range.    
+
+Note that each range may comprise of multiple individual polygons. If a spatial range comprises of discrete polygons, they must be polygon format.
+
+Multiple ranges may represent seasonal range use. Seasonal changes in range use will be specified by order of ranges in list, and timing of range shift is specified in the movement rules.
+
+#### 2.1.1 Load sample input seasonal ranges
 ```{r, results="hide",message=FALSE,warning=FALSE}
 winter_22_23<-st_read(system.file("wah_range_list.gpkg",package="crossR"),layer="winter_22_23")
 calving23<-st_read(system.file("wah_range_list.gpkg",package="crossR"),layer="calving23")
 ```
 
-#### Load road start/end coordinates
-```{r}
-data(wah_rdcoords)
-```
+#### 2.1.2 Format spatial ranges
 
-### Format inputs   
-`range_list` is just a list of sf data frames representing each range simulated animals will move between, in consecutive order (the first range is where animals are initialized), with names of list representing names of the seasonal ranges.
+You can simulate movement between multiple seasonal ranges by combining them into a list. Note that the order of the list is important-- the first polygon in the list is where individuals are initialized, followed by movement to the second, and so on.     
+
 ```{r}
 range_list=list("winter_22_23"=winter_22_23,"calving23"=calving23)
 ```
 
-### Format inputs to run simulation
-```{r, results="hide",message=FALSE,warning=FALSE}
-spatial_input=Format_Spatial_Data(range_list,rdcoords,inc=1000)
+### 2.2 Barrier coordinates.   
+
+Currently, barriers are input as start and end coordinates, as a simple 2x2 matrix. The first column contains the x coordinates, and second column contains the y coordinates. Each row represents each point.    
+
+#### 2.2.1 Load road start/end coordinates.   
+```{r}
+data(wah_rdcoords)
 ```
 
-### Set movement parameters
+### 2.3 Movement rules
+
+Movement rules are comprised of directional preference (towards spatial ranges) and rate of movement. Directional preference is determined by the order of spatial ranges in 'range_list'. Movement rules for each range are set using `Set_Spatial_Movement()`
+
+Currently, movement rate is specified using the shape and rate of gamma-distributed movement steps.  Start and end timesteps are also set respective to each movement rule. The last movement step set here also specifies the maximum timestep in the simulation.
+
+#### 2.3.1 Set movement parameters
 ```{r}
 mv_jday=
 	Set_Spatial_Movement(
-		n_range=2,
+		range_list,
 		sl_shp=c(10000,10000),
 		sl_rat=c(0.8,0.8),
 		start=c(1,100),
-		end=c(99,199),
-		sample_input=FALSE,
-		sel_range_names=names(range_list)
+		end=c(99,199)
 		)
 ```
 
-### Run simulation
+## 3. Run simulation
+
+Matrix objects are formatted from input spatial objects and a user-input resolution to format a list of objects formatted to pass to `Range_Simulate()`. The output is a list of 6 objects:
+
+* `range_list` - user input range_list
+* `dist_r_sprc` - a terra Spatrastercollection of resolution `inc` with cell values indicating the distance from the centroid of respective polygons in `range_list`, and extent matching full spatial extent of polygons in `range_list`
+* `grid_list` - list of matrices used by movement algorithm
+* `r` - raster with resolution matching `inc` and extent matching full spatial extent of polygons in `range_list`
+* `rdcoords` - user-input start and end road coordinates
+* `inc` - user-input spatial resolution of spatial objects
+
+### 3.1 Format objects to run simulation
+```{r, results="hide",message=FALSE,warning=FALSE}
+spatial_input=Format_Spatial_Data(range_list,wah_rdcoords,inc=1000)
+```
+
+### 3.2 Run simulation
+
+This runs the simulation. For now, "tracking" is the only option available in 'out.opts', which outputs a list of track locations.
+
+To run this function, `spatial_input` from `Format_Spatial_Data()`, `mv_jday` from `Set_Movement_Rules()`, number of individuals to simulate `N0`, and distance in meters where to initialize from centerpoint of first range `dist_start`.
+
 ```{r, results="hide",message=FALSE,warning=FALSE}
 output_list=
 	Range_Simulate(spatial_input, #spatial input formatted from Format_Spatial_Data
-							 rdcoords, #road start/end coordinates in matrix
 							 mv_jday, #data frame with behavioral strategy shift indicated by jday
-							 jday_max=199, #maximum numeric day
 							 N0=100,	#number of animals to simulate
-							 inc=1000, #resolution of spatial grid of simulation in meters
 							 dist_start=100000, #distance in meters where to initialize from centerpoint of first range
 							 out.opts=c("tracking") #output options
 							 )
 ```
 
-### Visualize simulation output
+### 3.3 Visualize simulation output
+
+`Visualize_Tracks` creates an animation at the specified path, and also outputs a formatted sf data frame (below, `trackdf`) of points where individuals are simulated. The first column indicates the timestep, and second column indicates the behavioral state (relative to the row of mv_jday). 
+
+The point colors of the output animation indicate the behavioral state change.
+
 ```{r, results="hide",message=FALSE,warning=FALSE}
 trackdf=
-	Vizualize_Tracks(output_list$tracking,
+	Visualize_Tracks(output_list$tracking,
 								 path="track_viz.gif",
 								 spatial_input,
 								 country="United States of America",

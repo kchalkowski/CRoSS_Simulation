@@ -275,11 +275,8 @@ Process_Outputs<-function(output_list,grid_list,akc3,mv_jday,inc){
 # Range_Simulate - export -----------
 Range_Simulate<-function(
 		spatial_input,
-		rdcoords,
 		mv_jday,
-		jday_max,
 		N0,
-		inc,
 		dist_start,
 		out.opts=c("tracking")
 	){
@@ -288,6 +285,8 @@ Range_Simulate<-function(
 	grid_list=spatial_input$grid_list
 	rdcoords=spatial_input$rdcoords
 	r=spatial_input$r
+	inc=spatial_input$inc
+	jday_max=max(mv_jday$end)
 
 #Need set this up to source cpp function outside
 #Need set up to just take road coords input
@@ -314,8 +313,8 @@ return(proc_sim_output)
 
 }
 
-# Vizualize_Tracks - export --------
-Vizualize_Tracks<-function(tracking,
+# Visualize_Tracks - export --------
+Visualize_Tracks<-function(tracking,
 													 path="track_viz.gif",
 													 spatial_input,
 													 country="United States of America",

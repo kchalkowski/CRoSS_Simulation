@@ -1,6 +1,6 @@
 
 # Create_Sample_Ras - helper --------
-Create_Sample_Ras<-function(len,inc,sample_input=TRUE,range_list=NULL){
+Create_Sample_Ras<-function(len,inc,sample_input=FALSE,range_list=NULL){
 	require(terra)
 
 if(sample_input
@@ -189,10 +189,27 @@ Append_Grid_Distance<-function(grid,range_dist_sprc,range_list,sample_input){
   return(grid)
 }
 
-# Format_Spatial_Data --------
+# Format_Spatial_Data - user --------
 Format_Spatial_Data<-function(range_list,
 														  rdcoords,
 															inc){
+	
+		if(is.null(names(range_list))){
+		stop("range_list must have names")	
+		}
+	
+	#check that crs of all ranges are the same
+	all_crs=lapply(range_list,sf::st_crs)
+	if(length(unique(all_crs))!=1){
+	message("CRS are not identical between ranges. This can cause problems. Verify that actual projections are identical.")
+		}
+	
+	#check that all crs units are meters or kilometers, not longlat degrees
+	ll_out=lapply(range_list,st_is_longlat)
+	ll_out=do.call(c,ll_out)
+	if(any(ll_out)){
+	stop("Ranges must use projected coordinate system.")
+		}
 	
 	#Create base raster
 	r=Create_Sample_Ras(len=NA,
@@ -231,14 +248,15 @@ Format_Spatial_Data<-function(range_list,
 									   "dist_r_sprc"=dist_r_sprc,
 										 "grid_list"=grid_list,
 										 "r"=r,
-										 "rdcoords"=rdcoords
+										 "rdcoords"=rdcoords,
+										 "inc"=inc
 										 )
 	
 	return(spatial_input)
 }
 
 # Move_Jday - helper ---------
-Move_Jday<-function(sample_input=TRUE,
+Move_Jday<-function(sample_input=FALSE,
 									  sel_range_names=NULL,
 									  sl_shp=NULL,
 										sl_rat=NULL,
@@ -283,22 +301,29 @@ Move_Jday<-function(sample_input=TRUE,
 
 # Set_Spatial_Movement - user ---------
 Set_Spatial_Movement<-function(
-		n_range,
+		range_list,
 		sl_shp,
 		sl_rat,
 		start,
-		end,
-		sample_input=FALSE,
-		sel_range_names=NULL
+		end
 		){
 
-if(is.null(sel_range_names)){
-	sel_range_names=paste0("range",1:n_range)
-}
+	if(!is.null(names(range_list))){
+	sel_range_names=names(range_list)
+	} else{
+	stop("range_list must have names")	
+	}
+	
+	if(length(sl_shp)!=length(range_list)|
+		 length(sl_rat)!=length(range_list)|
+		 length(start)!=length(range_list)|
+		 length(end)!=length(range_list)){
+	stop("Number of movement parameters must match the number of seasonal ranges")
+		}
 	
 mv_jday=
 	Move_Jday(
-		sample_input=sample_input,
+		sample_input=FALSE,
 		sel_range_names=sel_range_names,
 		sl_shp=sl_shp,
 		sl_rat=sl_rat,

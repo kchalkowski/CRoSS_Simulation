@@ -11,23 +11,23 @@ Format_Spatial_Data(range_list,rdcoords,inc)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{range_list}{a list}
+  \item{range_list}{a list of sf dataframes per seasonal range}
   \item{rdcoords}{a matrix of xy coordinates}
-  \item{inc}{an integer, the spatial resolution for the simulation}
+  \item{inc}{an integer, the spatial resolution for the simulation in meters}
 }
 \value{
-%%  ~Describe the value returned
-%%  If it is a LIST, use
-%%  \item{comp1 }{Description of 'comp1'}
-%%  \item{comp2 }{Description of 'comp2'}
-%% ...
-\item{grid_list}{list of grid objects}
-\item{other outputs}{other stuff}
+A named list containing the following:
+\item{range_list}{List, user-input range_list}
+\item{dist_r_sprc}{SpatRasterCollection of rasters with values indicating the distance from each cell to the centroid of each polygon in the range_list seasonal ranges. Each distance raster corresponds to a seasonal range.}
+\item{grid_list}{List of objects needed for movement algorithm}
+\item{r}{SpatRaster with input resolution (inc). Extent and CRS are drawn from input spatial ranges}
+\item{rdcoords}{matrix, user-input start and end road coordinates}
+\item{inc}{integer, user-input grid resolution}
 }
 \references{
 }
 \author{
-Kayleigh Chalkowski, kchalkowski@gmail.com
+Kayleigh Chalkowski, Kayleigh.Chalkowski@tamuk.edu
 }
 \note{
 }
@@ -35,12 +35,5 @@ Kayleigh Chalkowski, kchalkowski@gmail.com
 \seealso{
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or standard data sets, see data().
 
-## The function is currently defined as
-function (x) 
-{
-  }
 }

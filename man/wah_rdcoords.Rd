@@ -25,6 +25,6 @@ Sample input data that can be used for Format_Spatial_Data function
 %%  ~~ possibly secondary sources and usages ~~
 }
 \examples{
-rdcoords=data("wah_rdcoords")
+data(wah_rdcoords)
 }
 \keyword{datasets}
